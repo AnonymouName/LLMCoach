@@ -1,0 +1,852 @@
+"Law38_1": "Motor vehicle signal lights and non-motor vehicle signal lights indicate: When the green light is on, vehicles are allowed to pass, but turning vehicles shall not hinder the passing of straight vehicles and pedestrians that are being released."
+trigger 
+    always 
+condition                                    
+    find_traffic_light(green, not_flash, <, 20m)         
+    find_obstacle(pedestrian, right, (>, 10m))                                
+    find_obstacle(pedestrian, front, (>, 10m))
+    find_obstacle(pedestrian, left, (>, 10m))
+    find_obstacle(vehicle, right, (>, 10m))
+    vehicle_state((<, 1km/h))
+then
+    Mano(launch)
+end
+
+"Law38_2": "Motor vehicle signal lights and non-motor vehicle signal lights indicate: When the yellow light is on, vehicles that have crossed the stop line can continue to pass;"
+trigger 
+    always 
+condition
+    find_traffic_light(yellow, not_flash, <, 20m)
+    find_traffic_light(yellow, not_flash, >, 5m)
+then
+    Mano(stop)
+end
+
+"Law38_3": "Motor vehicle signal lights and non-motor vehicle signal lights indicate: When the red light is on, vehicles are prohibited from passing. When the red light is on, vehicles turning right can pass without hindering the passage of vehicles or pedestrians."
+trigger 
+    always 
+condition
+    find_traffic_light(red, not_flash, <, 20m)
+    vehicle_state(turn_left_or_go_straight)
+then
+    Mano(stop)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(red, not_flash, <, 20m)
+    vehicle_state(turn_right, (<, 1km/h))
+then
+    Mano(launch)
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(red, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end
+
+"Law40_1": "Directional signal lights indicate: When the green arrow light is on, allow vehicles in the lane to pass in the direction indicated;"
+trigger 
+    always 
+condition                                    
+    find_traffic_light(left-turn_signal_light, green, <, 20m)         
+    vehicle_state(turn_left, (<, 1km/h))
+then
+    Mano(launch)
+end
+trigger 
+    always 
+condition                                    
+    find_traffic_light(right-turn_signal_light, green, <, 20m)         
+    vehicle_state(turn_right, (<, 1km/h))
+then
+    Mano(launch)
+end
+trigger 
+    always 
+condition                                    
+    find_traffic_light(straight-through_signal_light, green, <, 20m)         
+    vehicle_state(go_straight, (<, 1km/h))
+then
+    Mano(launch)
+end
+
+
+"Law40_2": "Directional signal lights indicate: When the red arrow traffic light is illuminated, vehicles in the corresponding direction must stop and are prohibited from proceeding.",
+trigger 
+    always 
+condition                                    
+    find_traffic_light(left-turn_signal_light, red, <, 20m)
+    vehicle_state(turn_left)         
+then
+    Mano(stop)
+end
+trigger 
+    always 
+condition                                    
+    find_traffic_light(right-turn_signal_light, red, <, 20m)
+    vehicle_state(turn_right)         
+then
+    Mano(stop)
+end
+trigger 
+    always 
+condition                                    
+    find_traffic_light(straight-through_signal_light, red, <, 20m)
+    vehicle_state(go_straight)         
+then
+    Mano(stop)
+end
+
+"Law41": "The arrow directions of the directional signal light indicate the intended movement: a left-pointing arrow signifies a left turn, an upward-pointing arrow signifies going straight, and a right-pointing arrow signifies a right turn."
+NONE
+
+"Law42": "The flashing warning signal light is a yellow light that continues to flash, reminding vehicles and pedestrians to pay attention when passing through, and pass after confirming safety."
+trigger
+	always
+condition
+	 find_traffic_light(yellow, flash, <, 20m)
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law43": "At a railway crossing where the roadway intersects with railway tracks, a flashing or steady red traffic light indicates that vehicles and pedestrians are prohibited from crossing. When the red light is off, it signifies that vehicles and pedestrians are allowed to proceed."
+trigger
+	always
+condition
+	distance_to(railway_crossing, <, 20m)
+	find_traffic_light(warning_signal_light, red,  <, 20m)
+then
+	Mano(stop)
+end
+trigger
+	always
+condition
+	distance_to(railway_crossing, <, 20m)
+	find_traffic_light(warning_signal_light, black,  <, 20m)
+	vehicle_state( (<, 1km/h))
+then
+	Mano(launch)
+end
+
+"Law44_1": "Where there are two or more motor vehicle lanes in the same direction on a urban road, the leftmost lane shall be designated as the fast lane, and the rightmost lane as the slow lane. Motor vehicles traveling in the fast lane must maintain the speed specified for that lane. Vehicles unable to meet the required speed for the fast lane shall move to the slow lane."
+trigger
+	in(urban_lane)
+condition
+	is_special_lane(fast_lane)
+	vehicle_state((>=, 60km/h))
+then
+	Set(Expected_speed, 60)
+end
+trigger
+	in(urban_lane)
+condition
+	is_special_lane(fast_lane)
+	vehicle_state((<, 40km/h))
+then
+	Change_lane(right, 1)
+end
+
+"Law44_2": "Where there are two or more motorized lanes in the same direction on the urban road, the left side is the fast lane and the right side is the slow lane. Motorcycles should drive in the rightmost lane."
+NONE
+
+"Law44_3": "Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. If there are traffic signs indicating the driving speed, drive at the indicated driving speed."
+trigger
+	always
+condition
+	find_signal(speed_limit_signal, <, 20m)
+then
+	Set(Expected_speed, posted_limit_speed)
+end
+
+"Law44_4": "Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. When a motor vehicle in a slow lane overtakes the preceding vehicle, it can borrow the fast lane to drive."
+trigger
+	always
+condition
+	!is_special_lane(fast_lane)
+then
+	Set(Whether_allow_left_lane_change, True)
+	Set(Whether_allow_borrow_lane(left), True)
+end
+
+"Law44_5": "When there are two or more lanes for motor vehicles traveling in the same direction, a motor vehicle shall change lanes only when it does not impede the normal movement of vehicles already traveling in the target lane."
+trigger
+	always
+condition
+	find_obstacle(vehicle, left, (>, 20m))
+then
+	Set(Whether_allow_left_lane_change, True)
+end
+trigger
+	always
+condition
+	find_obstacle(vehicle, right, (>, 20m))
+then
+	Set(Whether_allow_right_lane_change, True)
+end
+
+"Law45_1": "Motor vehicles must not exceed the speed indicated by the speed limit signs and markings on the road.",
+trigger
+	always
+condition
+	find_signal(speed_limit_signal, <, 20m)
+then
+	SetCheckAction(Whether_check, speed_limit_signal, True)
+end
+
+"Law45_2": "On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads without a road centerline, urban roads are 30 kilometers per hour, and highways are 40 kilometers per hour;"
+trigger
+	in(urban_lane)
+condition
+	is_special_lane(without_centerline)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(highway)
+condition
+	is_special_lane(without_centerline)
+then
+	Set(Expected_speed, 40km/h)
+end
+
+"Law45_3": "On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads with only one motor vehicle lane in the same direction, 50 kilometers per hour for urban roads and 70 kilometers per hour for highways."
+trigger
+	in(urban_lane)
+condition
+	is_special_lane(one_lane_same_direction)
+then
+	Set(Expected_speed, 50km/h)
+end
+trigger
+	in(motorway)
+condition
+	is_special_lane(one_lane_same_direction)
+	!vehicle_state(speed_limit)
+then
+	Set(Expected_speed, 70km/h)
+end
+
+"Law46_1": "When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When entering or leaving a non-motorized vehicle lane, passing through a railway crossing, a sharp curve, a narrow road, or a narrow bridge;"
+trigger
+	in(non-motorized)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(railway_crossing)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(sharp_curve)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(narrow_road)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(narrow_bridge)
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law46_2": "When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When making a U-turn, turning, or going downhill;"
+trigger
+	always
+condition
+	vehicle_state(u_turn)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	vehicle_state(turn_left)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	vehicle_state(turn_right)	
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law46_3": "When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: In case of fog, rain, snow, sand dust, hail, the visibility is within 50 meters;",
+trigger
+	always
+condition
+	weather_is(foggy)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	weather_is(raining)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	weather_is(snowing)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	weather_is(sandstorm)	
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	always
+condition
+	weather_is(hail)	
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law46_4": "When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When driving on icy and muddy roads;"
+trigger
+	in(icy_road)
+then
+	Set(Expected_speed, 30km/h)
+end
+trigger
+	in(muddy_road)
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law46_5": "When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When towing a malfunctioning motor vehicle."
+trigger
+	always
+condition
+	vehicle_state(towing)
+then
+	Set(Expected_speed, 30km/h)
+end
+
+"Law47_1": "When a motor vehicle is overtaking, it shall turn on the left turn signal in advance, change the use of far and low beam lights, or honk the horn.",
+trigger
+	always
+condition
+	vehicle_state(change_lane_to_left)
+then
+	State(left_turn_light, True)
+	State(alternated_between_high_and_low_beams, True)
+	State(horn, True)
+end
+
+"Law47_2": "On a road with no center line of the road or with only one motor vehicle lane in the same direction, when the vehicle in front meets the vehicle behind and sends an overtaking signal, if conditions permit, the speed should be reduced and the road should be made to the right. After confirming that there is a sufficient safety distance, the following vehicle should pass from the left side of the vehicle in front, and after pulling the necessary safety distance from the overtaken vehicle, turn on the right turn signal and drive back to the original lane.",
+NONE
+
+"Law48_1": "On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: Slow down and keep to the right, and keep a necessary safe distance from other vehicles and pedestrians;"
+trigger
+	always
+condition
+	is_special_lane(without_centerline)
+	find_obstacle(vehicle, left, opposite, (<, 20m))
+then
+	Set(Whether_declearation, True)
+	Set(Dynamic_Obstacle_Deceleration_ratio, 0.5)
+	Set(Lateral_buffer_distance, 2m)
+end
+
+ "Law48_2": "On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: When an obstacle is present on the road, the vehicle on the side without the obstacle shall have the right of way. However, if the vehicle on the side with the obstacle has already entered the obstructed section while the vehicle on the unobstructed side has not, the vehicle on the side with the obstacle shall have the right of way.",
+trigger
+	always
+condition
+	is_special_lane(without_centerline)
+	find_obstacle(all, front, (<, 20m))
+	find_obstacle(vehicle, left, opposite, (>, 20m))
+then
+	Set(Whether_allow_borrow_lane(left), True)
+end
+
+"Law48_3": "On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On a narrow slope, the uphill side goes first; but when the downhill side has reached halfway and the uphill side is not uphill, the downhill side goes first;",
+NONE
+
+"Law48_4": "On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On the narrow mountain road, the side that does not rely on the mountain shall go first;"
+NONE
+
+"Law48_5": "On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: During nighttime driving, low beam headlights shall be used when approaching an oncoming vehicle from a distance greater than 150 meters. Low beams shall also be used when encountering non-motorized vehicles on narrow roads or narrow bridges at night."
+trigger
+	always
+condition
+	is_special_lane(without_centerline)
+	time_is(night)
+	find_obstacle(vehicle, left, opposite, (<, 150m))
+then
+	State(low_beam, True)
+end
+trigger
+	in(narrow_road)
+condition
+	is_special_lane(without_centerline)
+	time_is(night)
+	find_obstacle(bicycle, left, opposite, (<, 50m))
+then
+	State(low_beam, True)
+end
+trigger
+	in(narrow_bridges)
+condition
+	is_special_lane(without_centerline)
+	time_is(night)
+	find_obstacle(bicycle, left, opposite, (<, 50m))
+then
+	State(low_beam, True)
+end
+
+"Law49_1": "Motor vehicles shall not make a U-turn at locations where U-turns or left turns are prohibited by signs or markings, or at railway crossings, pedestrian crossings, bridges, sharp curves, steep slopes, tunnels, or other road sections where danger is likely to occur."
+trigger
+	always
+condition
+	find_signal(no_u-turn_signal, <, 10m)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	always
+condition
+	find_signal(no_left_turn_signal, <, 10m)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(railway_crossing)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(crosswalk)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(bridge)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(sharp_curve)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(steep_slope)
+then
+	Set(Whether_allow_u_turn, False)
+end
+trigger
+	in(tunnel)
+then
+	Set(Whether_allow_u_turn, False)
+end
+
+"Law49_2": "Motor vehicles can make U-turns where there is no prohibition of U-turning or left-turning signs or markings, but it shall not hinder the passage of other vehicles and pedestrians in normal driving."
+trigger
+	always
+condition
+    find_signal(no_u-turn_signal, >, 20m)
+	find_obstacle(all, left, opposite, (>, 20m))
+	find_obstacle(all, front, (>, 20m))
+then
+	Set(Whether_allow_u_turn, True)
+end
+
+"Law50": "When a motor vehicles reversing, the situation behind the vehicle shall be ascertained and the vehicle shall be reversed after confirming that it is safe. Do not reverse in railway crossings, intersections, one-way roads, bridges, sharp bends, steep slopes, or tunnels."
+trigger
+	always
+condition
+	find_obstacle(all, back, (<, 20m))
+then
+	Set(Whether_allow_reverse, False)
+end
+trigger
+	in(railway_crossing)
+then
+	Set(Whether_allow_reverse, False)
+end
+trigger
+	in(intersection)
+then
+	Set(Whether_allow_reverse, True)
+end
+trigger
+	in(bridge)
+then
+	Set(Whether_allow_reverse, True)
+end
+trigger
+	in(sharp_bend)
+then
+	Set(Whether_allow_reverse, True)
+end
+trigger
+	in(steep_slope)
+then
+	Set(Whether_allow_reverse, True)
+end
+trigger
+	in(tunnel)
+then
+	Set(Whether_allow_reverse, True)
+end
+
+"Law51_1": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;"
+NONE
+
+"Law51_2": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Those who are preparing to enter the roundabout let motor vehicles already in the intersection go ahead;",
+trigger
+	always
+condition
+	find_obstacle(vehicle, front, (<, 10m))
+	vehicle_state(stop)
+then
+	Mano(wait)
+end
+
+"Law51_3": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Turn on the turn signal when turning, and turn on the low beam when driving at night;",
+trigger
+	in(intersection)
+condition
+	vehicle_state(turn_left)
+then
+	State(left_turn_light, True)
+end
+trigger
+	in(intersection)
+condition
+	vehicle_state(turn_right)
+then
+	State(right_turn_light, True)
+end
+trigger
+	in(intersection)
+condition
+	time_is(night)
+then
+	State(low_beam, True)
+end
+
+"Law51_4": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Pass in turn when encountering a release signal;",
+trigger 
+    always 
+condition 
+    find_traffic_light(green, <, 20m)                                              
+    find_obstacle(vehicle, front, (>, 10m))
+    vehicle_state(stop)
+then
+    Mano(launch)
+end
+
+"Law51_5": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When the stop signal is encountered, stop outside the stop line in turn. If there is no stop line, stop outside the intersection;",
+trigger
+	always
+condition
+	find_traffic_light(red, <, 20m)
+then
+    Mano(stop)
+	Set(Stopping_distance, traffic_light, 5m)
+end
+	
+"Law51_6": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When turning right when there is a car in the same lane waiting for the release signal, stop and wait in turn;"
+NONE
+
+"Law51_7": "Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At intersections with no direction indicator lights, turning motor vehicles let straight vehicles and pedestrians go first. Right-turning motor vehicles traveling in the opposite direction let left-turning vehicles go first."
+NONE
+
+"Law52_1": "When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: If there are traffic signs or road markings, the vehicle must yield to the party with the right of way."
+trigger
+	always
+condition
+	find_signal(yield_signal, <, 20m)
+then
+	Mano(stop)
+	Set(Wait_time, yield_signal, 10s)
+end
+trigger
+	always
+condition
+	find_signal(stop_signal, <, 20m)
+then
+	Mano(stop)
+	Set(Wait_time, stop_signal, 10s)
+end
+
+"Law52_2": "When a motor vehicle passes through an intersection that is neither controlled by traffic lights nor directed by traffic police, it must comply with the following provisions: If there are no traffic signs or road markings to control the intersection, the vehicle must stop and look before entering, and yield the right of way to traffic coming from the right."
+trigger
+	always
+condition
+	distance_to(intersection, <, 20m)
+	!find_signal(stop_signal, <, 20m)
+	!find_signal(yield_signal, <, 20m)
+	!find_signal(traffic_light, <, 20m)
+then
+	Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+	Set(Wait_time, intersection, 10s)
+end
+
+"Law52_3": "When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: Vehicles making turns must yield to vehicles going straight."
+NONE
+
+"Law52_4": "When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it shall also comply with the following provision: A right-turning motor vehicle traveling in the opposite direction must yield to a left-turning vehicle.",
+NONE
+
+"Law53_1": " When a motor vehicle encounters traffic congestion at an intersection ahead, it shall stop and wait in order outside the intersection and must not enter the intersection."
+trigger
+	always
+condition
+	distance_to(intersection, <, 20m)
+	is_jam
+	!vehicle_state(stop)
+then
+	Mano(stop)
+end
+trigger
+	always
+condition
+	distance_to(intersection, <, 20m)
+	is_jam
+	vehicle_state(stop)
+then
+	Mano(wait)
+end
+trigger
+	always
+condition
+	distance_to(intersection, <, 20m)
+	!is_jam
+	vehicle_state(stop)
+then
+	Mano(launch)
+end
+
+"Law53_2": "When a motor vehicle encounters a motor vehicle in front of the vehicle parked in a queue or is driving slowly, it shall be queued in sequence, and shall not pass through or overtake from both sides of the vehicle in front and shall not park and wait in the area of crosswalks or no parking zone."
+trigger
+	in(crosswalk)
+condition
+	vehicle_state(stop)
+then
+	Mano(launch)
+end
+trigger
+	in(no_parking_zone)
+condition
+	vehicle_state(stop)
+then
+	Mano(launch)
+end
+
+"Law53_3": "When a motor vehicle is at an intersection or road section with reduced lanes, if there is a motor vehicle in front of the vehicle parked in a queue or driving slowly, one vehicle in each lane shall alternately drive into the intersection or road section with reduced lanes."
+NONE
+
+"Law57_1": "Motor vehicles shall use turn signals in accordance with the following provisions: When turning left, changing lanes to the left, preparing to overtake, leaving a parking place or turning around, the left turn signal shall be turned on in advance;"
+trigger
+	always
+condition
+	vehicle_state(turn_left)
+then
+	State(left_turn_light, True)
+end
+trigger
+	always
+condition
+	vehicle_state(change_lane_to_left)
+then
+	State(left_turn_light, True)
+end
+trigger
+	always
+condition
+	vehicle_state(u_turn)
+then
+	State(left_turn_light, True)
+end
+
+"Law57_2": "Motor vehicles shall use turn signals in accordance with the following provisions: When turning right, changing lanes to the right, driving back to the original lane after overtaking, or stopping by the side of the road, the right turn signal should be turned on in advance."
+trigger
+	always
+condition
+	vehicle_state(turn_right)
+then
+	State(right_turn_light, True)
+end
+trigger
+	always
+condition
+	vehicle_state(change_lane_to_right)
+then
+	State(right_turn_light, True)
+end
+trigger
+	always
+condition
+	vehicle_state(pull_over)
+then
+	State(right_turn_light, True)
+end
+
+"Law58": "When a motor vehicle is driving at night without streetlights, poor lighting, or low visibility conditions such as fog, rain, snow, sand, hail, etc., it shall turn on the headlights, position lights and rear position lights, but the vehicle in front driving in the same direction are driving at close distances, the high beam shall not be used. When a motor vehicle is driving in a foggy day, the fog lights and hazard warning flashes should be turned on."
+trigger
+	always	
+condition
+	time_is(night)
+then
+	State(high_beam, True)
+	State(position_light, True)
+end
+trigger
+	always	
+condition
+	weather_is(foggy)
+then
+	State(high_beam, True)
+	State(position_light, True)
+	State(fog_light, True)
+	State(hazard_warning_light, True)
+end
+trigger
+	always	
+condition
+	weather_is(rainning)
+then
+	State(high_beam, True)
+	State(position_light, True)
+end
+trigger
+	always	
+condition
+	weather_is(snowing)
+then
+	State(high_beam, True)
+	State(position_light, True)
+end
+trigger
+	always	
+condition
+	weather_is(sandstorm)
+then
+	State(high_beam, True)
+	State(position_light, True)
+end
+trigger
+	always	
+condition
+	weather_is(hail)
+then
+	State(high_beam, True)
+	State(position_light, True)
+end
+trigger
+	always	
+condition
+	find_obstacle(vehicle, <, 50m)
+	vehicle_state((high_beam))
+then
+	State(high_beam, False)
+	State(low_beam, True)
+end
+
+"Law59_1": "At night, when a vehicle passes sharp bends, slopes, arch bridges, crosswalks or intersections, it shall alternately use far and near lights."
+trigger
+	in(sharp_bend)
+condition
+	time_is(night)
+then
+	State(alternated_between_high_and_low_beams, True)
+end
+trigger
+	in(steep_slope)
+condition
+	time_is(night)
+then
+	State(alternated_between_high_and_low_beams, True)
+end
+trigger
+	in(crosswalk)
+condition
+	time_is(night)
+then
+	State(alternated_between_high_and_low_beams, True)
+end
+trigger
+	in(intersection)
+condition
+	time_is(night)
+then
+	State(alternated_between_high_and_low_beams, True)
+end
+
+"Law59_2": "When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn."
+trigger
+	always
+condition
+	distance_to(sharp_bend, <, 20)
+then
+	Set(Expected_speed, 20km/h)
+	State(horn, True)
+end
+
+"Law62_1": "Driving a motor vehicle shall not have the following behaviors: Turn off the engine or slide in neutral when descending a steep slope;",
+NONE
+
+"Law62_2": "Driving a motor vehicle shall not have the following behaviors: Honk horns in areas or road sections where honking is prohibited."
+trigger
+	always
+condition
+	find_signal(no_honking_signal, <, 20m)
+then
+	State(horn, False)
+end
+
+"Law64": "When a motor vehicle is passing a flooded Road or flooded Bridge, it shall stop and check the water conditions, and after confirming safety, pass at low speed."
+trigger
+	in(flooded_road)
+then
+	Set(Expected_speed, 20km/h)
+end
+trigger
+	in(flooded_bridge)
+then
+	Set(Expected_speed, 20km/h)
+end
+
+
+
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
