@@ -642,14 +642,14 @@ end
 trigger
 	in(crosswalk)
 condition
-	vehicle_state(stop)
+	vehicle_state(pull_over)
 then
 	Mano(launch)
 end
 trigger
 	in(no_parking_zone)
 condition
-	vehicle_state(stop)
+	vehicle_state(pull_over)
 then
 	Mano(launch)
 end
