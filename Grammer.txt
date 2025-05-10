@@ -32,7 +32,7 @@ ChangeLaneAction  ::= "Change_lane(" TurnDirection "," Times ")" ;
 ManoAction        ::= "Mano(" ManoType ")" ;
 StateAction       ::= "State(" Target "," Boolean ")";
 
-RoadType ::= "urban_lane" | "intersection" | "bridge" | "ferry_crossing" | "mountain_road" | "icy_road" | "flooded_road" | "flooded_bridge" | "motorway" | "railway_crossing" | "sharp_curve" | "narrow_road" | "narrow_bridge" | "muddy_road" | "non-motorized" | "steep_slope" | "sharp_bend" | "roundabout" | "crosswalk" | "no_parking_zone" | "tunnel";
+RoadType ::= "urban_lane" | "intersection" | "bridge" | "ferry_crossing" | "mountain_road" | "icy_road" | "flooded_road" | "flooded_bridge" | "motorway" | "railway_crossing" | "sharp_curve" | "narrow_road" | "narrow_bridge" | "muddy_road" | "non-motorized" | "steep_slope" | "sharp_bend" | "roundabout" | "crosswalk" | "no_parking_zone" | "tunnel" | "highway" | "highway_exit_ramp";
 Time ::= "daytime" | "night";
 Weather ::= "raining" | "foggy" | "snowing" | "sandstorm" | "hail";
 SpecialLane ::= "fast_lane" | "bus_lane" | "emergency_lane" | "without_centerline" | "one_lane_same_direction" | "non_motorized";
