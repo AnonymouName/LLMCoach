@@ -1,3 +1,4 @@
+
 UDrive = {
     "type": "function",
     "function" : {
@@ -16,12 +17,12 @@ UDrive = {
                         },
                         "in": {
                             "type": "string",
-                            "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway"],
+                            "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway", "highway_exit_ramp"],
                             "description": "Used to specify the type of road the vehicle is driving on when the rule takes effect."
                         },
                         "not_in": {
                             "type": "string",
-                            "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway"],
+                            "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway", "highway_exit_ramp"],
                             "description": "Used to specify the types of roads the vehicle must not be on when the rule takes effect."
                         }
                     },
@@ -55,7 +56,7 @@ UDrive = {
                             "properties": {
                                 "road_type": {
                                     "type": "string",
-                                    "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway"],
+                                    "enum": ["urban_lane", "intersection", "bridge", "ferry_crossing", "mountain_road", "icy_road", "flooded_road", "flooded_bridge", "motorway", "railway_crossing", "sharp_curve", "narrow_road", "narrow_bridge", "muddy_road", "non-motorized", "steep_slope", "sharp_bend", "roundabout", "crosswalk", "no_parking_zone", "tunnel", "highway", "highway_exit_ramp"],
                                     "description": "Used to describe the types of roads that may be encountered ahead."
                                 },
                                 "CompOp": {
