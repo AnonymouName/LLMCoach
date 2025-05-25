@@ -1,0 +1,2841 @@
+Law40_1: Directional signal lights indicate: When the green arrow light is on, allow vehicles in the lane to pass in the direction indicated;
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"always":true},"condition":{"find_traffic_light":{"color":"green"}},"action":{"Mano_action":"launch"}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {
+        "traffic_light_type": "left-turn_signal_light",
+        "color": "green",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {"Mano_action": "launch"}
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Added `traffic_light_type`:  
+  The description refers to a green **arrow** signal (directional signal), so we must specify which arrow (e.g., `"left-turn_signal_light"`, `"right-turn_signal_light"`, or `"straight-through_signal_light"`).
+- Included `CompOp` and `distance_num` in `find_traffic_light`:  
+  Every `find_traffic_light` constraint requires a comparison operator and a distance value to define at what range the rule applies.
+- Chose a representative `distance_num` (e.g. 20 m) and comparison operator (`"<"`) to indicate “when the green arrow is coming up within 20 m.”  
+- Left the `action` as `"Mano_action": "launch"`, which correctly instructs the vehicle to proceed once the green arrow condition is met.
+Law40_2: Directional signal lights indicate: When the red arrow traffic light is illuminated, vehicles in the corresponding direction must stop and are prohibited from proceeding.
+### Original Function Call:
+Function(arguments='{"trigger":{"always":true},"condition":{"find_traffic_light":{"color":"red"}},"action":{"Mano_action":"stop"}}', name='UDrive')
+
+### Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "find_traffic_light": {
+        "traffic_light_type": "left-turn_signal_light",
+        "color": "red",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "stop"
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Added `"traffic_light_type": "left-turn_signal_light"` to specify that the rule applies to a red directional (arrow) signal rather than any red light.
+- Included `"CompOp": "<"` and `"distance_num": 20` to define a sensible distance threshold at which the vehicle must begin to stop when approaching the red arrow.
+- Kept the action `"Mano_action": "stop"` unchanged, since the requirement is simply to halt and not proceed when the red arrow is illuminated.
+Law42: The flashing warning signal light is a yellow light that continues to flash, reminding vehicles and pedestrians to pay attention when passing through, and pass after confirming safety.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"always":true},"condition":{"find_traffic_light":{"color":"yellow","flash":true,"CompOp":"<","distance_num":20},"find_obstacle":{"obstacle_type":"all","position":"front","distance":{"CompOp":">","distance_num":0}},"vehicle_state":{"speed":{"CompOp":"<","speed_num":1}}},"action":{"Mano_action":"launch"}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "find_traffic_light": {
+        "color": "yellow",
+        "flash": true,
+        "CompOp": "<",
+        "distance_num": 20
+      },
+      "find_obstacle": {
+        "obstacle_type": "all",
+        "position": "front",
+        "distance": {
+          "CompOp": ">",
+          "distance_num": 10
+        }
+      },
+      "vehicle_state": {
+        "speed": {
+          "CompOp": "==",
+          "speed_num": 0
+        }
+      }
+    },
+    "action": {
+      "Mano_action": "launch"
+    }
+  }
+)
+
+### Modifications and Reasons:
+- Changed vehicle_state.speed from `{"CompOp":"<","speed_num":1}` to `{"CompOp":"==","speed_num":0}`  
+  Reason: The vehicle should come to a full stop at the flashing yellow before “launch” (i.e. begin moving) to satisfy “pass after confirming safety.”  
+
+- Increased the obstacle‐clearance threshold from `distance_num: 0` to `distance_num: 10` meters  
+  Reason: A 0 m threshold is vacuous (always true unless collision). A 10 m buffer ensures no obstacle is too close before proceeding.  
+
+- Kept the flashing‐yellow traffic‐light trigger (`flash: true`, `< 20 m`) unchanged  
+  Reason: This correctly captures “flashing warning signal light … yellow light that continues to flash … distance < 20 m.”
+Law43: At a railway crossing where the roadway intersects with railway tracks, a flashing or steady red traffic light indicates that vehicles and pedestrians are prohibited from crossing. When the red light is off, it signifies that vehicles and pedestrians are allowed to proceed.
+### Original Function Calls:
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 30}}, "action": {"Mano_action": "stop"}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 30}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+
+### Revised Function Call:
+```json
+{
+  "name": "UDrive",
+  "arguments": [
+    {
+      "trigger": { "in": "railway_crossing" },
+      "condition": {
+        "find_traffic_light": {
+          "color": "red",
+          "CompOp": "<",
+          "distance_num": 30
+        }
+      },
+      "action": {
+        "Mano_action": "stop"
+      }
+    },
+    {
+      "trigger": { "in": "railway_crossing" },
+      "condition": {
+        "find_traffic_light": {
+          "color": "black",
+          "CompOp": "<",
+          "distance_num": 30
+        }
+      },
+      "action": {
+        "Mano_action": "launch"
+      }
+    }
+  ]
+}
+```
+
+### Modifications and Reasons:
+- Combined the two separate UDrive calls into a single array of rule objects under one `UDrive` invocation for clarity and correct DSL usage.  
+- Removed the JSON‐in‐string pattern and passed actual objects in `arguments`.  
+- Kept `find_traffic_light.color = "red"` to represent both steady and flashing red lights (no need to specify `flash`).  
+- Used `find_traffic_light.color = "black"` to capture the “red off” state per domain definition (“black” = no active signal), triggering the proceed (`launch`) action.
+Law44_1: Where there are two or more motor vehicle lanes in the same direction on the urban road, the leftmost lane shall be designated as the fast lane, and the rightmost lane as the slow lane. Motor vehicles traveling in the fast lane must maintain the speed specified for that lane. Vehicles unable to meet the required speed for the fast lane shall move to the slow lane.
+Below is the analysis of the two UDrive calls you provided. In this case both calls are structurally valid JSON and they correctly capture the two aspects of the natural‐language requirement (1) enforce the fast‐lane speed, and (2) allow vehicles below the fast‐lane minimum to move right. No semantic errors were detected, but it is clearer if you group them into a rule set (a list of rules) rather than two separate invocations. 
+
+### 1) Original Function Calls
+
+Call 1  
+```
+Function(
+  arguments='{
+    "trigger": { "in": "urban_lane" },
+    "condition": { "is_special_lane": "fast_lane" },
+    "action": { "Expected_speed": { "limit_speed": true } }
+  }',
+  name='UDrive'
+)
+```
+
+Call 2  
+```
+Function(
+  arguments='{
+    "trigger": { "in": "urban_lane" },
+    "condition": {
+      "is_special_lane": "fast_lane",
+      "vehicle_state": { "speed": { "CompOp": "<", "speed_num": 30 } }
+    },
+    "action": { "Whether_allow_right_lane_change": true }
+  }',
+  name='UDrive'
+)
+```
+
+### 2) Revised Function Call
+
+```json
+[
+  {
+    "trigger": { "in": "urban_lane" },
+    "condition": {
+      "is_special_lane": "fast_lane"
+    },
+    "action": {
+      "Expected_speed": { "limit_speed": true }
+    }
+  },
+  {
+    "trigger": { "in": "urban_lane" },
+    "condition": {
+      "is_special_lane": "fast_lane",
+      "vehicle_state": {
+        "speed": { "CompOp": "<", "speed_num": 30 }
+      }
+    },
+    "action": {
+      "Whether_allow_right_lane_change": true
+    }
+  }
+]
+```
+
+### 3) Modifications and Reasons
+
+- Grouped the two single‐rule calls into a JSON list.  
+  • UDrive supports specifying multiple rules at once.  
+  • It makes clear these are two complementary rules in the same domain.  
+- No changes were made to parameters or logic—both rules already correctly  
+  implement:  
+  1. “Fast‐lane vehicles must maintain the lane’s speed limit”  
+  2. “If a vehicle in the fast lane cannot reach the minimum (30 km/h in this example), allow it to change to the right (slow) lane.”
+Law44_2: Where there are two or more motorized lanes in the same direction on the urban road, the left side is the fast lane and the right side is the slow lane. Motorcycles should drive in the rightmost lane.
+### Original Function Call:
+```json
+{
+  "name": "UDrive",
+  "arguments": {
+    "trigger": { "in": "urban_lane" },
+    "condition": { "is_special_lane": "non_motorized" },
+    "action": {
+      "Whether_allow_right_lane_change": true,
+      "Whether_allow_left_lane_change": false
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "name": "UDrive",
+  "arguments": {
+    "trigger": {
+      "in": "urban_lane"
+    },
+    "condition": {
+      /* Exclude the left (fast) lane so that the ego motorcycle drives in the rightmost (slow) lane */
+      "not_special_lane": "fast_lane"
+    },
+    "action": {
+      /* Ensure the vehicle moves into or stays in the rightmost lane */
+      "Whether_allow_right_lane_change": true,
+      "Whether_allow_left_lane_change": false,
+      /* Explicitly instruct a lane change to the right if not already there */
+      "Change_lane_action": {
+        "direction": "right",
+        "times": 1
+      }
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+- Changed `condition.is_special_lane = "non_motorized"`  
+  Reason: “non_motorized” describes a bicycle/non-motorized lane, which is not where motorcycles should drive. We instead exclude the fast (left) lane so the ego vehicle defaults to the rightmost (slow) lane.
+- Replaced with `condition.not_special_lane = "fast_lane"`  
+  Reason: The rule requires motorcycles to occupy the slow/rightmost lane. By forbidding fast lanes, the ego vehicle is constrained to the remaining lanes, i.e., the rightmost.
+- Added a `Change_lane_action` in the `action` block  
+  Reason: To actively move a motorcycle into the correct lane if it is not already there. The original flags only permit/prohibit lane changes; this explicit action completes the behavior.
+- Kept `Whether_allow_right_lane_change: true` and `Whether_allow_left_lane_change: false`  
+  Reason: Aligns with the policy that motorcycles may change into the rightmost lane but must not drift into the left (fast) lane.
+Law44_3: If there are traffic signs indicating the driving speed, drive at the indicated driving speed.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal"}},"action":{"Expected_speed":{"limit_speed":true}}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments={
+    "trigger": {"always": true},
+    "condition": {
+      "find_signal": {
+        "signal_type": "speed_limit_signal",
+        "CompOp": "<=", 
+        "distance_num": 5
+      }
+    },
+    "action": {
+      "Expected_speed": {"limit_speed": true}
+    }
+  },
+  name="UDrive"
+)
+
+### Modifications and Reasons:
+- Added `CompOp` and `distance_num` under `find_signal`  
+  • The schema requires both to define the proximity constraint for detecting the speed-limit sign.  
+  • Here we assume “within 5 m” (`"<=" 5`) as a reasonable sensing distance.
+- Switched the `arguments` value from a JSON string to a native object  
+  • Aligns with the pattern in the example calls, where `arguments` is a dict/object, not a raw string.
+Law44_4: Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. When a motor vehicle in a slow lane overtakes the preceding vehicle, it can borrow the fast lane to drive.
+### Original Function Call:
+Function(
+  name='UDrive',
+  arguments='{"trigger":{"in":"motorway"},"condition":{"is_special_lane":"one_lane_same_direction"},"action":{"Whether_allow_borrow_left_lane":true}}'
+)
+
+### Revised Function Call:
+Function(
+  name='UDrive',
+  arguments='''
+  {
+    "trigger": {
+      "in": "motorway"
+    },
+    "condition": {
+      "not_special_lane": "fast_lane"
+    },
+    "action": {
+      "Whether_allow_borrow_left_lane": true
+    }
+  }
+  '''
+)
+
+### Modifications and Reasons:
+- Changed `condition.is_special_lane":"one_lane_same_direction"` to `"condition.not_special_lane":"fast_lane"`  
+  Reason:  
+  • The original enum value `one_lane_same_direction` describes a roadway with only one directional lane, which contradicts the premise that there are two or more motorized lanes in the same direction.  
+  • In UDrive there is no explicit “slow_lane” enum, so specifying “not_special_lane: fast_lane” is the correct way to identify the slow lane.  
+- Removed the inappropriate special‐lane tag and replaced it with a complement constraint to target the slow lane.  
+- Left the trigger on “motorway” intact, since the rule only applies on multi‐lane motorways as per the description.  
+- Kept the action “Whether_allow_borrow_left_lane” unchanged, which grants permission to borrow the fast lane when overtaking.
+Law44_5: When there are two or more lanes for motor vehicles traveling in the same direction, a motor vehicle shall change lanes only when it does not impede the normal movement of vehicles already traveling in the target lane.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"always":true},"condition":{},"action":{"Whether_priority_change_lane":false}}',
+  name='UDrive'
+)
+
+### Analysis of Issues
+1.  The rule’s natural-language intent is “only change lanes when you will not impede traffic in the target lane.”  
+    – In the original call there is no condition checking for vehicles in the target lane.  
+2.  The original uses `Whether_priority_change_lane=false`, which simply tells the planner “don’t prioritize lane-changes,” but it doesn’t enforce *when* a lane-change is allowed.  
+3.  One must explicitly allow or disallow lane-changes (`Whether_allow_left_lane_change` / `Whether_allow_right_lane_change`), and guard them with a `find_obstacle` condition to ensure the target lane is clear.
+
+### Revised Function Call:
+Function(
+  arguments=json.dumps({
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "left",
+        "direction": "same",
+        "distance": {
+          "CompOp": ">",
+          "distance_num": 15
+        }
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "right",
+        "direction": "same",
+        "distance": {
+          "CompOp": ">",
+          "distance_num": 15
+        }
+      }
+    },
+    "action": {
+      "Whether_allow_left_lane_change": true,
+      "Whether_allow_right_lane_change": true
+    }
+  }),
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Removed `Whether_priority_change_lane` and instead used explicit lane-change permissions (`Whether_allow_left_lane_change` and `Whether_allow_right_lane_change`), which directly control whether a lane-change is permitted.  
+- Added two `find_obstacle` conditions (one for the left lane, one for the right) with `direction: "same"` and a safe buffer distance (15 m).  This enforces “do not impede the normal movement of vehicles already in the target lane.”  
+- Kept `trigger.always=true` so the rule applies on any multi-lane road.
+Law45_1: Motor vehicles must not exceed the speed indicated by the speed limit signs and markings on the road.
+### Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<=","distance_num":100}},"action":{"Expected_speed":{"limit_speed":true}}}'
+)
+
+### Revised Function Call:
+UDrive(
+  trigger = {
+    "always": True
+  },
+  condition = {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<=",
+      "distance_num": 100
+    }
+  },
+  action = {
+    "Expected_speed": {
+      "limit_speed": True
+    }
+  }
+)
+
+### Modifications and Reasons:
+- Unwrapped the JSON‐encoded string into actual parameters for the UDrive call, rather than passing a single `arguments` string.
+- Converted JSON booleans (`true`/`false`) to Python booleans (`True`/`False`).
+- Kept the trigger as `always: True` so the rule is always in force.
+- Used `find_signal` with `signal_type: "speed_limit_signal"`, `CompOp: "<="`, and a `distance_num` of 100 m to detect an upcoming speed‐limit sign within 100 m.
+- Specified the action as `Expected_speed: { "limit_speed": True }` to enforce that the vehicle’s speed must not exceed the posted limit.
+Law45_2: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads without a road centerline, urban roads are 30 kilometers per hour, and highways are 40 kilometers per hour;
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"in": "highway"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 40}}}', name='UDrive')
+
+### Issues Identified:
+- The second call uses trigger.in = "highway", but the UDrive schema defines “motorway” (not “highway”) for high‐speed roads.
+- (Optional) The natural‐language rule refers to “roads without speed limit signs and markings.” The DSL does not provide a direct way to assert the absence of a speed‐limit sign. If strict adherence to that clause is required, you would need a custom extension (e.g. a negative find_signal), which the current schema does not support.
+
+### Revised Function Calls:
+```python
+# 1) Urban roads without centerline → max 30 km/h
+Function(
+  arguments='''
+  {
+    "trigger":   { "in": "urban_lane" },
+    "condition": { "is_special_lane": "without_centerline" },
+    "action":    { "Expected_speed": { "speed_number": 30 } }
+  }
+  ''',
+  name='UDrive'
+)
+
+# 2) Motorways without centerline → max 40 km/h
+Function(
+  arguments='''
+  {
+    "trigger":   { "in": "motorway" },
+    "condition": { "is_special_lane": "without_centerline" },
+    "action":    { "Expected_speed": { "speed_number": 40 } }
+  }
+  ''',
+  name='UDrive'
+)
+```
+
+### Modifications and Reasons:
+- Changed `"in": "highway"` to `"in": "motorway"` to match the enumeration in the UDrive schema.
+- Left the `is_special_lane: "without_centerline"` clause intact, since that correctly captures “roads without a road centerline.”
+- Kept `Expected_speed.speed_number` to impose the maximum‐speed constraint of 30 km/h and 40 km/h respectively.  
+- Omitted any unsupported construct for “absence of speed‐limit signs,” as the current DSL does not provide a negative lookup for traffic signals.
+Law45_3: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads with only one motor vehicle lane in the same direction, 50 kilometers per hour for urban roads and 70 kilometers per hour for highways.
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 50}}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"in": "highway"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 70}}}', name='UDrive')
+
+### Revised Function Calls:
+1. Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 50}}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"in": "motorway"},     "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 70}}}', name='UDrive')
+
+### Modifications and Reasons:
+- Replaced trigger.in = "highway" with trigger.in = "motorway" because the UDrive schema enumerates “motorway” (not “highway”) as the correct identifier for limited-access roads.  
+- All other fields (“urban_lane”, “one_lane_same_direction”, and speed_number) already conform to the schema and the natural-language requirement for single‐lane speed limits.
+Law46_1: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When entering or leaving a non-motorized vehicle lane, passing through a railway crossing, a sharp curve, a narrow road, or a narrow bridge;
+### Original Function Calls:
+Function(arguments='{"trigger": {"in": "non-motorized"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "sharp_curve"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "narrow_road"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "narrow_bridge"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+
+### Issues Identified
+1. **Missing special-vehicle rule**  
+   The natural-language requirement specifies two speed caps:  
+   - ≤ 30 km/h for *ordinary motor vehicles*  
+   - ≤ 15 km/h for *tractors, battery vehicles, wheeled special-machinery*  
+   The original calls only enforce 30 km/h, without distinguishing vehicle types.  
+2. **Duplication of nearly identical rules**  
+   Five nearly identical calls differ only in `"trigger.in"`. This is error-prone and verbose.  
+3. **DSL does not natively support “vehicle type”**  
+   The UDrive schema lacks a `vehicle_type` or similar field in `condition`.  
+
+### Revised Function Calls
+Below we (a) combine the five road-feature triggers into one array, (b) introduce a new `condition.vehicle_type` field to separate special vehicles, and (c) issue two rules—one for ordinary vehicles, one for special ones.
+
+```
+[ 
+  {
+    "trigger": {
+      "in": [
+        "non-motorized",
+        "railway_crossing",
+        "sharp_curve",
+        "narrow_road",
+        "narrow_bridge"
+      ]
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  },
+  {
+    "trigger": {
+      "in": [
+        "non-motorized",
+        "railway_crossing",
+        "sharp_curve",
+        "narrow_road",
+        "narrow_bridge"
+      ]
+    },
+    "condition": {
+      "vehicle_type": [
+        "tractor",
+        "battery_vehicle",
+        "wheeled_special_machinery"
+      ]
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 15 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons
+- **Combined triggers into an array**  
+  Rather than five separate rules, we list all five road-feature values under a single `trigger.in` array to reduce duplication and ensure consistency.
+- **Added `condition.vehicle_type`**  
+  To honor the requirement “tractors, battery vehicles, wheeled special-machinery ≤ 15 km/h,” we introduce a new condition field `vehicle_type`.  
+- **Duplicated rule with lower speed**  
+  We keep one rule for ordinary motor vehicles at 30 km/h, and a second rule for the specified special vehicle categories capped at 15 km/h.
+- **DSL extension**  
+  Because the original UDrive schema lacks a `vehicle_type` field, this proposal also entails a schema extension. You will need to add under `condition.properties`:
+  ```json
+  "vehicle_type": {
+    "type": "array",
+    "items": {
+      "type": "string",
+      "enum": [
+        "tractor",
+        "battery_vehicle",
+        "wheeled_special_machinery"
+      ]
+    },
+    "description": "Vehicle category for special speed limits."
+  }
+  ```
+  This ensures the function call is both semantically aligned with the regulation and technically valid.
+Law46_2: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When making a U-turn, turning, or going downhill;
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+3. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+
+### Issues Identified
+- The natural‐language requirement also covers “going downhill,” which is not represented.
+- There is a separate speed cap (15 km/h) for tractors, battery vehicles, and wheeled special machinery, but the current DSL has no way to distinguish vehicle types in `condition`.
+
+### Revised Function Calls
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "u_turn" }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "turn_left" }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "turn_right" }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  },
+  {
+    "trigger": { "in": "steep_slope" },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Added a fourth rule for “going downhill” by using `trigger.in = "steep_slope"`.  
+- Left the three original rules for U-turn, left turn, and right turn intact, since each driving state requires its own rule.  
+- Noted that the DSL currently cannot express different speed limits by vehicle type (tractors, battery vehicles, wheeled special machinery). To capture the 15 km/h cap for those classes, the DSL would need an extension, for example:
+  ```json
+  "condition": {
+    "vehicle_type": { "enum": ["tractor","battery","special_machinery"] }
+  }
+  ```
+- Ensured that each rule’s scope is correct: the first three use `trigger.always=true`, the downhill rule uses a road‐type trigger.
+
+Law46_3: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: In case of fog, rain, snow, sand dust, hail, the visibility is within 50 meters;
+### Original Function Call:
+Function(
+  name="UDrive",
+  arguments="""
+    {
+      "trigger": { "always": true },
+      "condition": {
+        "weather_is": "foggy",
+        "find_obstacle": {
+          "obstacle_type": "all",
+          "position": "front",
+          "distance": { "CompOp": "<=", "distance_num": 50 }
+        }
+      },
+      "action": {
+        "Expected_speed": { "speed_number": 30 }
+      }
+    }
+  """
+)
+
+### Issues with the Original Call
+1. **Wrong mechanism for “visibility ≤ 50 m”**  
+   “find_obstacle” is meant to detect a physical obstacle, not to express atmospheric visibility.  
+2. **No distinction by vehicle category**  
+   The requirement imposes two different speed limits—30 km/h for general motor vehicles and 15 km/h for tractors, battery vehicles, and wheeled special machinery—but the DSL call only sets one speed for “all.”  
+3. **Single weather condition only**  
+   The English text covers fog, rain, snow, sand dust and hail. A single rule with `"weather_is":"foggy"` covers only fog.
+
+### Revised Function Call
+Below we (1) introduce a new `visibility` condition, (2) introduce a `vehicle_type` condition, and (3) split into two rules. We also show how one might generalize `weather_is` to a list if the DSL is extended that way.
+
+
+Law46_4: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When driving on icy and muddy roads;
+### Original Function Call:
+Function(arguments='{"trigger": {"in": "icy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "muddy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "in": "icy_road" },
+    "action": {
+      "Expected_speed": {
+        "speed_number": 30,
+        "limit_speed": true
+      }
+    }
+  },
+  {
+    "trigger": { "in": "muddy_road" },
+    "action": {
+      "Expected_speed": {
+        "speed_number": 30,
+        "limit_speed": true
+      }
+    }
+  },
+  {
+    "trigger": { "in": "icy_road" },
+    "condition": {
+      "vehicle_type": {
+        "type": ["tractor", "battery_vehicle", "wheeled_special_machinery"]
+      }
+    },
+    "action": {
+      "Expected_speed": {
+        "speed_number": 15,
+        "limit_speed": true
+      }
+    }
+  },
+  {
+    "trigger": { "in": "muddy_road" },
+    "condition": {
+      "vehicle_type": {
+        "type": ["tractor", "battery_vehicle", "wheeled_special_machinery"]
+      }
+    },
+    "action": {
+      "Expected_speed": {
+        "speed_number": 15,
+        "limit_speed": true
+      }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Added `"limit_speed": true` under `Expected_speed` to indicate this is a maximum‐speed constraint, not a target cruising speed.
+- Split into four rules so that:
+  1. All motor vehicles on icy roads are capped at 30 km/h.
+  2. All motor vehicles on muddy roads are capped at 30 km/h.
+  3. Tractors, battery vehicles, and wheeled special machinery on icy roads are capped at 15 km/h.
+  4. Tractors, battery vehicles, and wheeled special machinery on muddy roads are capped at 15 km/h.
+- Introduced a new `condition.vehicle_type` field (with an array of the three special vehicle categories) to restrict the 15 km/h limit to the appropriate vehicle classes.  
+  *Note: If the current UDrive schema does not support a `vehicle_type` condition, that property must be added to the DSL before these rules can be implemented.*
+Law46_5: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When towing a malfunctioning motor vehicle.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":30}}}',
+  name='UDrive'
+)
+
+### Issues / Analysis
+1. The natural‐language rule distinguishes **two classes** of towing vehicles:
+   - “ordinary motor vehicles” → max 30 km/h  
+   - “tractors, battery vehicles, wheeled special machinery” → max 15 km/h  
+   The single call only encodes the 30 km/h case, so the slower limit is missing.  
+2. The rule is specifically about towing a **malfunctioning** motor vehicle, but the call’s condition merely checks `driving_state: "towing"`. There is no guarantee the towed vehicle is actually malfunctioning.  
+3. The current DSL has no built-in `vehicle_type` field to distinguish tractors, battery vehicles, etc., so we must extend it or else we cannot encode the 15 km/h branch.
+
+### Revised Function Call:
+Below we show a proposal that (a) refines “towing a malfunctioning vehicle” by detecting a stationary towed vehicle, and (b) splits the rule into two, one for general motor vehicles and one for the three special categories. We assume we have extended the DSL with an optional `vehicle_type` field under `condition`.
+
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "towing"
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "direction": "back",
+        "speed": { "CompOp": "==", "speed_num": 0 }
+      }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 30 }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "towing"
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "direction": "back",
+        "speed": { "CompOp": "==", "speed_num": 0 }
+      },
+      "vehicle_type": {
+        "enum": [
+          "tractor",
+          "battery_vehicle",
+          "wheeled_special_machinery"
+        ]
+      }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 15 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Added a `find_obstacle` check for a towed vehicle with `"speed": {"CompOp":"==","speed_num":0}` to ensure it is **malfunctioning** (stationary).  
+- **Split** into two rules:
+  1. General motor vehicles → `Expected_speed = 30`.
+  2. Tractors, battery vehicles, wheeled special machinery → `Expected_speed = 15`.  
+- Introduced a new optional condition property `vehicle_type` to differentiate those three special categories (this requires extending the DSL).  
+- Kept `trigger.always = true` and `vehicle_state.driving_state = "towing"` per the original intent.
+Law47_1: When a motor vehicle is overtaking, it shall turn on the left turn signal in advance, change the use of far and low beam lights, or honk the horn.
+### Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"change_lane_to_left"}},"action":{"State_action":{"target":"left_turn_light","whether_turn_on":true}}}'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane": true,
+      "State_action": [
+        {
+          "target": "left_turn_light",
+          "whether_turn_on": true
+        },
+        {
+          "target": "high_beam",
+          "whether_turn_on": true
+        },
+        {
+          "target": "low_beam",
+          "whether_turn_on": false
+        },
+        {
+          "target": "horn",
+          "whether_turn_on": true
+        }
+      ]
+    }
+  }
+)
+
+### Modifications and Reasons:
+- Wrapped multiple `State_action` entries in a list so that the rule can simultaneously turn on the left‐turn signal, switch beam lights, and honk the horn.
+- Added `"Whether_priority_change_lane": true` to emphasize that the vehicle is actively prioritizing the lane change as part of the overtaking maneuver.
+- Kept `"driving_state":"change_lane_to_left"` as the condition to represent “when a motor vehicle is overtaking.”
+Law47_2: On a road with no center line of the road or with only one motor vehicle lane in the same direction, when the vehicle in front meets the vehicle behind and sends an overtaking signal, if conditions permit, the speed should be reduced and the road should be made to the right. After confirming that there is a sufficient safety distance, the following vehicle should pass from the left side of the vehicle in front, and after pulling the necessary safety distance from the overtaken vehicle, turn on the right turn signal and drive back to the original lane.
+### Original Function Call:
+Function(
+  arguments='{"trigger": {"always": true}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Whether_allow_left_lane_change": true, "Whether_allow_borrow_left_lane": true}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front"
+      }
+    },
+    "action": {
+      "Dynamic_Obstacle_Deceleration_ratio": 30,
+      "Change_lane_action": { "direction": "right", "times": 1 }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": { "CompOp": "<=", "distance_num": 20 }
+      }
+    },
+    "action": {
+      "Whether_allow_left_lane_change": true,
+      "Change_lane_action": { "direction": "left", "times": 1 }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": { "CompOp": ">", "distance_num": 20 }
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      },
+      "Change_lane_action": { "direction": "right", "times": 1 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Split into three sequential rules**  
+  The overtaking maneuver involves (1) slowing and moving right, (2) passing on the left, and (3) returning to the original lane with right‐turn signal. Each step is best modeled as a separate rule.
+
+- **Added `find_obstacle` condition**  
+  We must detect the vehicle ahead (`obstacle_type = "vehicle", position = "front"`) and, in steps 2–3, its distance to decide when to initiate each sub‐action.
+
+- **Introduced `Dynamic_Obstacle_Deceleration_ratio`**  
+  To represent “reduce speed” when conditions permit, we apply e.g. a 30% deceleration to the following vehicle as it prepares to move right.
+
+- **Specified `Change_lane_action`**  
+  Concrete lane‐change commands (“right” then “left” then “right”) replace the generic “allow” flags, ensuring the ego vehicle actually executes the maneuver.
+
+- **Used `State_action` for turn signal**  
+  On the final step, we turn on the right‐turn signal before re‐entering the original lane, matching the requirement to “turn on the right turn signal and drive back.”
+
+- **Retained `is_special_lane` constraint**  
+  The first two rules maintain the check for a road “without_centerline” (one motor‐vehicle lane in the same direction).
+Law48_1: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: Slow down and keep to the right, and keep a necessary safe distance from other vehicles and pedestrians;
+### Original Function Call:
+Function(
+  arguments = '{"trigger":{"always":true},"condition":{"is_special_lane":"without_centerline","find_obstacle":{"obstacle_type":"vehicle","position":"front","direction":"opposite"}},"action":{"Whether_declearation":true,"Dynamic_Obstacle_Deceleration_ratio":0.5,"Lateral_buffer_distance":1.5}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments = '{
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "is_special_lane": "without_centerline"
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.5,
+      "Static_Obstacle_Deceleration_ratio": 0.5,
+      "Dynamic_Obstacle_Follow_distance": 10,
+      "Forward_buffer_distance": 10,
+      "Lateral_buffer_distance": 2,
+      "Whether_allow_left_lane_change": false,
+      "Whether_allow_right_lane_change": true
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Removed the `find_obstacle` condition.  
+  *Reason:* The rule (“slow down and keep to the right, and maintain safe distance”) applies continuously on roads without a centerline, not only when a specific obstacle appears. We capture obstacle‐related behavior via buffer distances and follow distances in `action`.  
+- Broadened deceleration to both static and dynamic obstacles.  
+  *Reason:* The text calls for slowing down whenever necessary, whether the obstacle is moving (dynamic) or parked/pedestrian (static).  
+- Added `Dynamic_Obstacle_Follow_distance`, `Forward_buffer_distance`, and increased `Lateral_buffer_distance` to integers.  
+  *Reason:* To ensure a “necessary safe distance” in front and laterally, and to satisfy the integer type requirement for buffer distances.  
+- Restricted lane changes to the right only.  
+  *Reason:* “Keep to the right” implies no left‐lane borrowing; thus we disable left‐lane changes and allow motion in the rightmost lane.  
+- Kept `"Whether_declearation"` boolean name as per schema.  
+  *Reason:* Matches the provided DSL property name for initiating deceleration.
+Law48_2: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: When an obstacle is present on the road, the vehicle on the side without the obstacle shall have the right of way. However, if the vehicle on the side with the obstacle has already entered the obstructed section while the vehicle on the unobstructed side has not, the vehicle on the side with the obstacle shall have the right of way.
+### Analysis of the First Function Call
+
+Original Function Call:  
+```python
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "all",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 15}
+      }
+    },
+    "action": {"Mano_action": "yield"},
+    "action_note": "Yield for oncoming vehicle if the ego\'s lane is blocked and the opposite lane is clear."
+  }',
+  name='UDrive'
+)
+```
+
+Revised Function Call:  
+```python
+Function(
+  arguments={
+    "trigger": {
+      "always": True
+    },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": [
+        {
+          "obstacle_type": "all",
+          "position": "front",
+          "direction": "same",
+          "distance": { "CompOp": "<=", "distance_num": 15 }
+        },
+        {
+          "obstacle_type": "all",
+          "position": "front",
+          "direction": "opposite",
+          "distance": { "CompOp": ">", "distance_num": 15 }
+        }
+      ]
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  },
+  name="UDrive"
+)
+```
+
+Modifications and Reasons:  
+- Removed the non‐schema field `"action_note"`. It is not defined in the UDrive DSL.  
+- Added a second `find_obstacle` constraint (in an array) to check that the *opposite* lane is clear:  
+  • set `"direction": "opposite"` + `"> 15 m"`  
+- Added `"direction": "same"` to the first `find_obstacle` so it unambiguously refers to a blockage in the ego lane.  
+- Grouped multiple `find_obstacle` constraints into an array since the DSL allows repeating that constraint (they are ANDed).  
+- Retained `is_special_lane: "without_centerline"` to capture “roads without central line.”  
+- Kept `Mano_action: "yield"` for the obligated yielding behavior on a two‐way road.
+
+---
+
+### Analysis of the Second Function Call
+
+Original Function Call:  
+```python
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "all",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 15}
+      },
+      "find_obstacle_opp": {
+        "obstacle_type": "all",
+        "position": "back",
+        "distance": {"CompOp": ">=", "distance_num": 5}
+      }
+    },
+    "action": {"Mano_action": "launch"},
+    "action_note": "If the ego vehicle has entered the obstructed section, it has the right of way and should proceed."
+  }',
+  name='UDrive'
+)
+```
+
+Revised Function Call:  
+```python
+Function(
+  arguments={
+    "trigger": {
+      "always": True
+    },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": [
+        {
+          "obstacle_type": "all",
+          "position": "front",
+          "direction": "same",
+          "distance": { "CompOp": "<=", "distance_num": 15 }
+        },
+        {
+          "obstacle_type": "all",
+          "position": "back",
+          "direction": "same",
+          "distance": { "CompOp": "<=", "distance_num": 15 }
+        }
+      ]
+    },
+    "action": {
+      "Mano_action": "launch"
+    }
+  },
+  name="UDrive"
+)
+```
+
+Modifications and Reasons:  
+- Removed the invalid `"find_obstacle_opp"` key; the DSL only defines `find_obstacle`.  
+- Replaced it with a second `find_obstacle` entry (in the same array) to detect an obstacle *behind* the ego vehicle (i.e. the obstacle‐side vehicle is now behind):  
+  • `"position": "back"`, `"direction": "same"`, distance `<= 15 m` indicates the ego has entered the obstructed segment.  
+- Again grouped both `find_obstacle` constraints into an array for clarity and correct AND‐semantics.  
+- Dropped the unsupported `"action_note"`.  
+- Left `Mano_action: "launch"` to allow the ego vehicle to proceed once it has priority.
+Law48_3: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On a narrow slope, the uphill side goes first; but when the downhill side has reached halfway and the uphill side is not uphill, the downhill side goes first;
+### Original Function Calls:
+
+1.  
+```python
+Function(
+  arguments='{
+    "trigger": {"in": "steep_slope"},
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite"
+      }
+    },
+    "action": {"Mano_action": "yield"}
+  }',
+  name='UDrive'
+)
+```
+
+2.  
+```python
+Function(
+  arguments='{
+    "trigger": {"in": "steep_slope"},
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite"
+      },
+      "distance_to": {
+        "road_type": "steep_slope",
+        "CompOp": "<",
+        "distance_num": 5
+      }
+    },
+    "action": {"Mano_action": "go_straight"}
+  }',
+  name='UDrive'
+)
+```
+
+Law48_5: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: During nighttime driving, low beam headlights shall be used when approaching an oncoming vehicle from a distance greater than 150 meters. Low beams shall also be used when encountering non-motorized vehicles on narrow roads or narrow bridges at night.
+### Original Function Call 1:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"in": "narrow_road"},  
+               "condition": {"time_is": "night",  
+                             "find_obstacle": {"obstacle_type": "non-motorized",  
+                                               "position": "front",  
+                                               "distance": {"CompOp": "<=", "distance_num": 150}}},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+### Revised Function Call 1:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"in": "narrow_road"},  
+               "condition": {"time_is": "night",  
+                             "find_obstacle": {"obstacle_type": "non-motorized",  
+                                               "position": "front",  
+                                               "distance": {"CompOp": "<=", "distance_num": 150}}},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+---
+
+### Original Function Call 2:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"in": "narrow_bridge"},  
+               "condition": {"time_is": "night",  
+                             "find_obstacle": {"obstacle_type": "non-motorized",  
+                                               "position": "front",  
+                                               "distance": {"CompOp": "<=", "distance_num": 150}}},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+### Revised Function Call 2:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"in": "narrow_bridge"},  
+               "condition": {"time_is": "night",  
+                             "find_obstacle": {"obstacle_type": "non-motorized",  
+                                               "position": "front",  
+                                               "distance": {"CompOp": "<=", "distance_num": 150}}},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+---
+
+### Original Function Call 3:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"not_in": "urban_lane"},  
+               "condition": {"time_is": "night",  
+                             "find_obstacle": {"obstacle_type": "vehicle",  
+                                               "position": "front",  
+                                               "direction": "opposite",  
+                                               "distance": {"CompOp": ">", "distance_num": 150}},  
+                             "is_special_lane": "without_centerline"},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+### Revised Function Call 3:
+Function(  
+  name='UDrive',  
+  arguments='{"trigger": {"always": true},  
+               "condition": {"time_is": "night",  
+                             "is_special_lane": "without_centerline",  
+                             "find_obstacle": {"obstacle_type": "vehicle",  
+                                               "position": "front",  
+                                               "direction": "opposite",  
+                                               "distance": {"CompOp": ">", "distance_num": 150}}},  
+               "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}'  
+)
+
+### Modifications and Reasons for Call 3:
+- Changed `"trigger": {"not_in": "urban_lane"}` → `"trigger": {"always": true}`  
+  The rule applies on *any* road without a central line or isolation barrier, not only outside urban lanes.  
+- Kept `"is_special_lane": "without_centerline"` in the **condition** to capture “roads without a central line.”  
+- Retained the `find_obstacle` check for an oncoming vehicle (`direction: "opposite"`) at distance `>150 m`, matching “when approaching from farther than 150 m.”  
+- This aligns exactly with “at night on roads without central isolation or central line, use low beam when an oncoming vehicle is more than 150 m away.”
+Law49_1: Motor vehicles shall not make a U-turn at locations where U-turns or left turns are prohibited by signs or markings, or at railway crossings, pedestrian crossings, bridges, sharp curves, steep slopes, tunnels, or other road sections where danger is likely to occur.
+### Original Function Calls:
+```plaintext
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "crosswalk"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "bridge"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "sharp_curve"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "tunnel"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+```
+
+### Revised Function Calls:
+```python
+# 1) Prohibit U-turn wherever a "no U-turn" sign is present
+Function(
+  arguments=json.dumps({
+    "trigger":       { "always": True },
+    "condition":     { 
+      "find_signal": {
+        "signal_type": "no_u-turn_signal",
+        "CompOp":      "<",
+        "distance_num": 20
+      }
+    },
+    "action":        { "Whether_allow_u_turn": False }
+  }),
+  name='UDrive'
+)
+
+# 2) Prohibit U-turn wherever a "no left turn" sign is present
+Function(
+  arguments=json.dumps({
+    "trigger":       { "always": True },
+    "condition":     {
+      "find_signal": {
+        "signal_type": "no_left_turn_signal",
+        "CompOp":      "<",
+        "distance_num": 20
+      }
+    },
+    "action":        { "Whether_allow_u_turn": False }
+  }),
+  name='UDrive'
+)
+
+# 3–8) Prohibit U-turn at specified dangerous road sections
+for env in [
+  "railway_crossing",
+  "crosswalk",
+  "bridge",
+  "sharp_curve",
+  "steep_slope",
+  "tunnel"
+]:
+    Function(
+      arguments=json.dumps({
+        "trigger":   { "in": env },
+        "condition": {},
+        "action":    { "Whether_allow_u_turn": False }
+      }),
+      name='UDrive'
+    )
+```
+
+### Modifications and Reasons:
+- Wrapped every call in a `"condition"` object (even if empty) to conform to the UDrive schema (`trigger`, `condition`, `action`).
+- Added **two rules** for sign-based prohibitions—one reacting to a `no_u-turn_signal` and one to a `no_left_turn_signal`—since the natural language mentions “prohibited by signs or markings.”
+- Kept the original six environment-based rules (railway crossings, crosswalks, bridges, sharp curves, steep slopes, tunnels) but moved the empty constraints under `"condition": {}`.
+- Chose a distance threshold (`CompOp: "<", distance_num: 20`) for sign detection to match example conventions; this parameter can be tuned as needed.
+Law49_2: Motor vehicles can make U-turns where there is no prohibition of turning or left-turning signs or markings, but it shall not hinder the passage of other vehicles and pedestrians in normal driving.
+### Original Function Call:
+Function(arguments='{"trigger":{"always":true},"condition":{},"action":{"Whether_allow_u_turn":true}}',  
+name='UDrive')
+
+### Issues Identified
+1. **Lack of prohibition‐sign check**  
+   The natural language says “Motor vehicles can make U‐turns where there is no prohibition of turning or left‐turning signs or markings.”  The empty `condition` does not verify absence of a “no U‐turn” sign.
+2. **No safety‐distance constraints**  
+   The description requires that U‐turns “shall not hinder the passage of other vehicles and pedestrians in normal driving.”  We need to ensure adequate clearance from nearby vehicles/pedestrians.
+3. **Overly permissive trigger**  
+   As written, `trigger.always=true` would allow U‐turns even where prohibited.
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_u-turn_signal",
+      "CompOp": ">",
+      "distance_num": 0
+    },
+    "find_obstacle": [
+      {
+        "obstacle_type": "vehicle",
+        "position": "left",
+        "distance": { "CompOp": ">", "distance_num": 5 }
+      },
+      {
+        "obstacle_type": "vehicle",
+        "position": "right",
+        "distance": { "CompOp": ">", "distance_num": 5 }
+      },
+      {
+        "obstacle_type": "pedestrian",
+        "position": "front",
+        "distance": { "CompOp": ">", "distance_num": 3 }
+      },
+      {
+        "obstacle_type": "pedestrian",
+        "position": "back",
+        "distance": { "CompOp": ">", "distance_num": 3 }
+      }
+    ]
+  },
+  "action": {
+    "Whether_allow_u_turn": true
+  }
+}
+```
+
+### Modifications and Reasons:
+- Added `find_signal` check for `"no_u-turn_signal"` with `CompOp: ">"` and `distance_num: 0`  
+  • Ensures that no “no U‐turn” prohibition sign is immediately present.  
+- Introduced four `find_obstacle` entries (as an array)  
+  • Enforces a minimum clearance of 5 m from other vehicles on the left and right  
+  • Enforces a minimum clearance of 3 m from pedestrians in front and behind  
+  • These distances guard against hindering other road users during the U-turn  
+- Kept `trigger.always=true`  
+  • U-turn rule is evaluated continuously, but will only fire when the above conditions are met  
+- Left `action.Whether_allow_u_turn=true` unchanged  
+  • Once the sign‐absence and safety conditions are satisfied, an U-turn is allowed
+Law50: When a motor vehicle is reversing, the driver must ensure that the area behind the vehicle is clear of other vehicles, pedestrians, and obstacles, and may only begin reversing after confirming it is safe to do so. Reversing is prohibited at railway crossings, intersections, one-way streets, bridges, sharp curves, steep slopes, and tunnels.
+### Original Function Call:
+Function(arguments='{"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"reverse"},"find_obstacle":{"obstacle_type":"all","position":"back","distance":{"CompOp":"<=","distance_num":1}}},"action":{"Mano_action":"wait"}}', name='UDrive')
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" },
+      "find_obstacle": {
+        "obstacle_type": "all",
+        "position": "back",
+        "distance": { "CompOp": ">", "distance_num": 1 }
+      }
+    },
+    "action": {
+      "Whether_allow_reverse": true,
+      "Mano_action": "launch"
+    }
+  },
+  {
+    "trigger": { "in": "railway_crossing" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "intersection" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "bridge" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "sharp_curve" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "steep_slope" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "tunnel" },
+    "condition": {
+      "vehicle_state": { "driving_state": "reverse" }
+    },
+    "action": {
+      "Whether_allow_reverse": false,
+      "Mano_action": "stop"
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Changed the **distance condition** from “<= 1 m” to “> 1 m” so the rule permits reversing only when the area behind is clear beyond a safe threshold.
+- Split the behavior into two broad kinds of rules:
+  1. **Allow-reverse rule:** Triggered always, requires `reverse` state and no obstacle within 1 m behind, then issues `Mano_action: "launch"` and sets `Whether_allow_reverse: true`.
+  2. **Prohibition rules:** One rule per forbidden road type (`railway_crossing`, `intersection`, `one_lane_same_direction` (one-way street), `bridge`, `sharp_curve`, `steep_slope`, `tunnel`). Each triggers when reversing in that environment, sets `Whether_allow_reverse: false`, and issues `Mano_action: "stop"`.
+- Used `Whether_allow_reverse` flags to explicitly permit or prohibit the reversing maneuver in each scenario.
+- Employed separate rules for each prohibited location because `trigger.in` accepts only one road-type per rule.
+Law51_1: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;
+Law51_1: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"in":"intersection"},"condition":{},"action":{"Whether_priority_change_lane":true}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+We actually need two rules—one for left turns and one for right turns—so that the vehicle moves into the correct guide lane based on its intended direction. For example:
+
+Function(
+  arguments='[
+    {
+      "trigger": { "in": "intersection" },
+      "condition": {
+        "vehicle_state": { "driving_state": "turn_left" }
+      },
+      "action": {
+        "Change_lane_action": { "direction": "left", "times": 1 }
+      }
+    },
+    {
+      "trigger": { "in": "intersection" },
+      "condition": {
+        "vehicle_state": { "driving_state": "turn_right" }
+      },
+      "action": {
+        "Change_lane_action": { "direction": "right", "times": 1 }
+      }
+    }
+  ]',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Replaced the generic `Whether_priority_change_lane` flag with a concrete `Change_lane_action`, since “drive into the guide lane” requires an explicit lane‐change command, not merely a priority hint.  
+- Added `vehicle_state.driving_state` conditions (`turn_left` and `turn_right`) so the rule only fires when the vehicle intends to turn left or right.  
+- Split into two separate rules (one for left turns, one for right turns) to reflect “according to the required direction of travel.”  
+- Kept the same trigger (`in: "intersection"`) because the regulation applies at signalized intersections.
+Law51_2: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Those who are preparing to enter the roundabout let motor vehicles already in the intersection go ahead;
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"in":"roundabout"},"condition":{"distance_to":{"road_type":"roundabout","CompOp":"<","distance_num":10},"find_obstacle":{"obstacle_type":"vehicle","position":"front","distance":{"CompOp":"<=","distance_num":10}}},"action":{"Mano_action":"yield"}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  name='UDrive',
+  arguments="{'trigger':{'always': True},  
+               'condition':{  
+                 'distance_to':{'road_type':'roundabout','CompOp':'<','distance_num':10},  
+                 'find_obstacle':{'obstacle_type':'vehicle','position':'front','distance':{'CompOp':'<=','distance_num':10}}  
+               },  
+               'action':{'Mano_action':'yield'}  
+             }"
+)
+
+### Modifications and Reasons:
+- Changed `trigger` from `{"in":"roundabout"}` to `{"always": True}`  
+  Reason: The original says “those preparing to enter the roundabout…”; using `trigger.in = "roundabout"` would fire only once you are already inside. By setting `always: True`, we defer to the `distance_to` condition to identify “approaching” the roundabout.  
+- Kept `distance_to` with `< 10 m` to detect approaching the entry point  
+  Reason: This correctly interprets “preparing to enter the roundabout” by checking that the ego vehicle is within 10 m of the roundabout.  
+- Retained a single `find_obstacle` check for a vehicle ≤ 10 m in front  
+  Reason: Vehicles already circulating in the roundabout will appear as obstacles ahead when approaching, so yielding is appropriate.  
+- Left `Mano_action: 'yield'` unchanged  
+  Reason: Yields control to the circulating traffic, precisely matching the regulation.
+Law51_3: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Turn on the turn signal when turning, and turn on the low beam when driving at night;
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"in": "intersection"}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+2. Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}', name='UDrive')
+
+---
+
+### Revised Function Calls:
+
+1a. Turn‐on left‐turn signal when turning left through an intersection controlled by traffic lights:
+```json
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "vehicle_state": {
+      "driving_state": "turn_left"
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "left_turn_light",
+      "whether_turn_on": true
+    }
+  }
+}
+```
+
+1b. Turn‐on right‐turn signal when turning right through an intersection controlled by traffic lights:
+```json
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "vehicle_state": {
+      "driving_state": "turn_right"
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "right_turn_light",
+      "whether_turn_on": true
+    }
+  }
+}
+```
+
+2. Turn‐on low beam when driving through an intersection at night:
+```json
+{
+  "trigger": { "in": "intersection" },
+  "condition": { "time_is": "night" },
+  "action": {
+    "State_action": {
+      "target": "low_beam",
+      "whether_turn_on": true
+    }
+  }
+}
+```
+
+---
+
+### Modifications and Reasons:
+- Added `vehicle_state.driving_state` in calls (1a & 1b) to ensure the rule only fires when the vehicle is actually turning left or right, matching “turn on the turn signal when turning.”
+- Split the turn‐signal rule into two separate rules (left and right) because signaling differs by direction.
+- Kept the “night” condition in the low‐beam rule so it only applies after dark, per “turn on the low beam when driving at night.”
+- Retained `trigger: { "in": "intersection" }` in all rules to limit them to intersections controlled by traffic lights, as specified.
+Law51_4: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Pass in turn when encountering a release signal;
+### Original Function Call:
+Function(arguments='{"trigger":{"in":"intersection"},"condition":{"find_traffic_light":{"color":"green"}},"action":{"Whether_priority_change_lane":false}}', name='UDrive')
+
+### Revised Function Call:
+Function(
+  arguments=
+    '{"trigger":{"in":"intersection"},'
+    '"condition":{"find_traffic_light":'
+      '{"color":"green","CompOp":"<=","distance_num":20}'
+    '},'
+    '"action":{'
+      '"Whether_priority_change_lane":false,'
+      '"Mano_action":"launch"'
+    '}}',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Added `"CompOp":"<=","distance_num":20` under `find_traffic_light`  
+  Reason: A `find_traffic_light` constraint must include a comparison operator and a distance so the vehicle knows *when* it sees the green light.
+- Added `"Mano_action":"launch"` to the `action` block  
+  Reason: “Pass in turn” at a green light implies the vehicle should proceed; `Mano_action: "launch"` encodes that behavior.
+- Kept `"Whether_priority_change_lane":false`  
+  Reason: To enforce “passing in turn” without changing lanes or overtaking.
+Law51_5: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When the stop signal is encountered, stop outside the stop line in turn. If there is no stop line, stop outside the intersection;
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": { "in": "intersection" },
+    "condition": {
+      "find_signal": {
+        "signal_type": "stop_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "stop",
+      "Stopping_distance": {
+        "reason": "stop_signal",
+        "distance": 2
+      }
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Because the requirement has two cases—(1) stop when there is a stop line, and (2) stop before the intersection when no stop line is present—we split this into two separate UDrive rules:
+
+[
+  {
+    "trigger": { "in": "intersection" },
+    "condition": {
+      "find_signal": {
+        "signal_type": "stop_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "stop",
+      "Stopping_distance": {
+        "reason": "stop_signal",
+        "distance": 2
+      }
+    }
+  },
+  {
+    "trigger": { "in": "intersection" },
+    "condition": {
+      "find_signal": {
+        "signal_type": "stop_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "stop",
+      "Stopping_distance": {
+        "reason": "intersection",
+        "distance": 2
+      }
+    }
+  }
+]
+
+Function(
+  arguments=json.dumps([...the two-rule array above...]),
+  name="UDrive"
+)
+
+### Modifications and Reasons:
+- Split into two separate rules to cover both “with stop line” and “without stop line” scenarios.  
+- In Rule 1, the stopping distance reason remains `"stop_signal"` (stop outside the stop line).  
+- In Rule 2, the stopping distance reason is changed to `"intersection"` (stop before entering the intersection when no stop line exists).  
+- Both rules share the same trigger and distance‐to‐signal condition per the natural language requirement.
+Law51_6: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When turning right when there is a car in the same lane waiting for the release signal, stop and wait in turn;
+### Original Function Call:
+Function(arguments='{"trigger":{"in":"intersection"},"condition":{"find_traffic_light":{"CompOp":"<","distance_num":20},"vehicle_state":{"driving_state":"turn_right"},"find_obstacle":{"obstacle_type":"vehicle","position":"front","distance":{"CompOp":"<=","distance_num":5},"speed":{"CompOp":"<=","speed_num":1}}},"action":{"Mano_action":"stop"}}', name='UDrive')
+
+### Revised Function Call:
+UDrive({
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "traffic_light_type": "right-turn_signal_light",
+      "color": "green",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {
+      "driving_state": "turn_right"
+    },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {
+        "CompOp": "<=",
+        "distance_num": 5
+      },
+      "speed": {
+        "CompOp": "==",
+        "speed_num": 0
+      }
+    }
+  },
+  "action": {
+    "Mano_action": "stop"
+  }
+})
+
+### Modifications and Reasons:
+- Changed `arguments` from a JSON‐encoded string to a direct JSON object to match the DSL’s expected input format.
+- Added `"traffic_light_type": "right-turn_signal_light"` under `find_traffic_light` so we specifically detect the right‐turn release signal at the intersection.
+- Left the generic `<20 m` distance check but tied it to the right‐turn arrow rather than an unspecified traffic light.
+- Tightened the obstacle’s speed constraint from `<=1 km/h` to `==0 km/h` to reflect that the preceding vehicle is fully stopped (i.e., “waiting for the release signal”).
+- Kept the `Mano_action: "stop"` as the correct action to instruct the ego vehicle to stop and wait behind the halted vehicle.
+Law51_7: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At intersections with no direction indicator lights, turning motor vehicles let straight vehicles and pedestrians go first. Right-turning motor vehicles traveling in the opposite direction let left-turning vehicles go first.
+### Original Function Calls:
+
+1)  
+```  
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_left"},
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {"Mano_action": "yield"}
+  }',
+  name='UDrive'
+)
+```
+
+2)  
+```  
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_left"},
+      "find_obstacle": {
+        "obstacle_type": "pedestrian",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {"Mano_action": "yield"}
+  }',
+  name='UDrive'
+)
+```
+
+3)  
+```  
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_right"},
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {"CompOp": "<=", "distance_num": 10},
+        "speed": {"CompOp": ">=", "speed_num": 1}
+      }
+    },
+    "action": {"Mano_action": "yield"}
+  }',
+  name='UDrive'
+)
+```
+
+---
+
+### Issues Identified
+
+1. **Key Overwrites / Singular `find_obstacle`**  
+   - In examples 1 and 2 we have separate calls for vehicle and pedestrian, but per DSL each constraint can appear multiple times. In JSON you cannot repeat the same key; you must instead supply an array of `find_obstacle` objects.
+
+2. **Unnecessary Speed Constraint in Rule 3**  
+   - The regulation says right-turning vehicles yield to oncoming left-turning vehicles, but it does not require a minimum speed check (`speed >= 1 km/h`).  
+
+3. **Lack of Consolidation for Left-turn Rule**  
+   - The natural language says “turning motor vehicles let straight vehicles and pedestrians go first.” Those are two types of obstacles in one rule (vehicles + pedestrians). Splitting them into two separate calls is clumsy when both conditions apply simultaneously.
+
+4. **Omission of “No Arrow” Condition**  
+   - The rule applies only at intersections without directional (arrow) lights. In UDrive this is captured by omitting `traffic_light_type`, meaning the light is a plain circular green.
+
+---
+
+### Revised Function Calls
+
+Below are two consolidated and corrected UDrive rules:
+
+Rule A – Left Turn Yielding to Straight Vehicles and Pedestrians  
+```json
+{
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {
+      "driving_state": "turn_left"
+    },
+    "find_obstacle": [
+      {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 10
+        }
+      },
+      {
+        "obstacle_type": "pedestrian",
+        "position": "front",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 10
+        }
+      }
+    ]
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+```
+
+Rule B – Right Turn Yielding to Oncoming Left Turners  
+```json
+{
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {
+      "driving_state": "turn_right"
+    },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<=",
+        "distance_num": 10
+      }
+    }
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+```
+
+---
+
+### Modifications and Reasons
+
+- Combined the two left-turn obstacle types (straight vehicles + pedestrians) into one `find_obstacle` array rather than two separate calls.
+- Removed the unnecessary `speed` constraint in the right-turn scenario.
+- Ensured each rule omits `traffic_light_type` to indicate a circular green (no directional arrows).
+- Kept the `CompOp` and `distance_num` values to approximate “if obstacles are within 10 m” as a safe yield threshold.
+- Preserved the core DSL structure: one rule per maneuver (left-turn vs. right-turn).
+Law52_1: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: If there are traffic signs or road markings, the vehicle must yield to the party with the right of way.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"in":"intersection"},"condition":{"find_signal":{"CompOp":"<","distance_num":20}},"action":{"Whether_check":{"check_type":"yield_signal","check_sign":true},"Mano_action":"yield"}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "find_signal": {
+        "signal_type": "yield_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+)
+
+### Modifications and Reasons:
+- **Specify `signal_type`**  
+  The `find_signal` object requires a `"signal_type"` property. We set `"signal_type":"yield_signal"` to detect yield signs or markings.
+
+- **Move checking into the condition, not the action**  
+  The DSL’s `Whether_check` belongs in a monitoring context, but here yielding is a behavior triggered by seeing the yield sign—so we capture it in `condition.find_signal` and remove `Whether_check` from `action`.
+
+- **Streamline the action**  
+  The only required behavior is to “yield,” so we drop extra fields in `action` and leave only `"Mano_action":"yield"`.
+
+- **Retain the intersection trigger**  
+  We keep `"trigger":{"in":"intersection"}` to apply the rule only when passing through an uncontrolled intersection.
+Law52_2: When a motor vehicle passes through an intersection that is neither controlled by traffic lights nor directed by traffic police, it must comply with the following provisions: If there are no traffic signs or road markings to control the intersection, the vehicle must stop and look before entering, and yield the right of way to traffic coming from the right.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_signal": {
+        "signal_type": "yield_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {"Mano_action": "yield"}
+  }',
+  name='UDrive'
+)
+
+### Revised Function Calls:
+Because the natural‐language rule actually contains two separate requirements—(1) stop and look before entering an uncontrolled intersection, and (2) yield to traffic coming from the right—we split it into two UDrive rules:
+
+1) Stop and look before entering  
+```json
+{
+  "trigger": { "in": "intersection" },
+  "action": { "Mano_action": "stop" }
+}
+```
+
+2) Yield to vehicles approaching from the right  
+```json
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "direction": "same",
+      "distance": { "CompOp": "<", "distance_num": 20 }
+    }
+  },
+  "action": { "Mano_action": "yield" }
+}
+```
+
+### Modifications and Reasons:
+- **Removed `find_signal`**: The rule applies when there are *no* traffic signs or markings; detecting a yield‐sign is exactly the opposite of the requirement.  
+- **Split into two rules**: The natural‐language text prescribes two sequential behaviors (stop then yield), so we express them as two UDrive rules rather than cramming both into one.  
+- **Added `find_obstacle` for “right”**: To capture “yield to traffic coming from the right,” we look for vehicles on the right within a reasonable distance.  
+- **Used `Mano_action: stop`** for the first rule: Stopping and looking has no precondition other than being in an uncontrolled intersection.  
+- **Used `Mano_action: yield`** for the second rule: Once a vehicle is detected from the right, the ego vehicle executes a yield action.
+Law52_3: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: Vehicles making turns must yield to vehicles going straight.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"in":"intersection"},"condition":{},"action":{"Whether_priority_change_lane":false,"Mano_action":"yield"}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments=
+    '{"trigger":{"in":"intersection"},'
+  + '"condition":{'
+    + '"vehicle_state":{"driving_state":"turn_left_or_turn_right"},'
+    + '"find_traffic_light":{"color":"black","CompOp":"<=","distance_num":0}'
+  + '},'
+  + '"action":{"Mano_action":"yield"}}',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Added `vehicle_state.driving_state = "turn_left_or_turn_right"`  
+  Reason: The natural-language rule applies **only** to vehicles making turns; straight-through vehicles are not required to yield.
+- Added `find_traffic_light.color = "black", CompOp="<=", distance_num=0`  
+  Reason: To ensure the intersection is **not** controlled by traffic lights (color `"black"` denotes no active signal).  
+- Removed `"Whether_priority_change_lane": false`  
+  Reason: Lane-change priority is unrelated to a yield gesture at an uncontrolled intersection.  
+- Kept `"Mano_action": "yield"`  
+  Reason: This correctly encodes the “turning vehicles must yield” behavior.
+Law52_4: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it shall also comply with the following provision: A right-turning motor vehicle traveling in the opposite direction must yield to a left-turning vehicle.
+### Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger":{"in":"intersection"},
+    "condition":{
+      "find_signal":{"signal_type":"traffic_light"},
+      "find_signal":{"signal_type":"yield_signal"}
+    },
+    "action":{}
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "turn_right"
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 30
+        }
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+)
+
+### Modifications and Reasons:
+- Removed the two `find_signal` entries and the unsupported `"signal_type":"traffic_light"`.  The rule applies specifically to uncontrolled intersections (no signals or police), so no “find_signal” constraint is needed.
+- Added a `vehicle_state.driving_state = "turn_right"` constraint to ensure this rule only triggers when the ego vehicle is executing a right turn.
+- Introduced a single `find_obstacle` constraint with `"direction": "opposite"` and a reasonable distance threshold to detect an oncoming vehicle (the left-turner) approaching from the opposite direction.
+- Set the `action.Mano_action` to `"yield"`, matching the requirement that the right-turning vehicle must yield to the left-turning one.
+Law53_1: When a motor vehicle encounters traffic congestion at an intersection ahead, it shall stop and wait in order outside the intersection and must not enter the intersection.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {"is_jam": true},
+    "action": {"Mano_action": "stop"}
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+{
+  "trigger": {
+    "not_in": "intersection"
+  },
+  "condition": {
+    "is_jam": true,
+    "distance_to": {
+      "road_type": "intersection",
+      "CompOp": "<=",
+      "distance_num": 10
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Wait_time": {
+      "reason": "intersection",
+      "time": 3
+    }
+  }
+}
+
+### Modifications and Reasons:
+- Changed trigger from `"in": "intersection"` to `"not_in": "intersection"`  
+  • The requirement is to stop *outside* the intersection, not while already inside it.  
+- Added a `distance_to` constraint on the intersection  
+  • Ensures the vehicle only stops when it approaches the congested intersection (here within 10 m).  
+- Kept `is_jam: true` to detect traffic congestion.  
+- Added a `Wait_time` object with `reason: "intersection"`  
+  • Indicates that after stopping, the vehicle must wait in order before entering the intersection.  
+- Left `Mano_action: "stop"` as the prescribed behavior upon meeting these conditions.
+Law53_2: When a motor vehicle encounters a motor vehicle in front of the vehicle parked in a queue or is driving slowly, it shall be queued in sequence, and shall not pass through or overtake from both sides of the vehicle in front and shall not park and wait in the area of crosswalks or no parking zone.
+### Original Function Calls:
+
+1.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10},
+        "speed": {"CompOp": "<=", "speed_num": 10}
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane": false,
+      "Whether_allow_left_lane_change": false,
+      "Whether_allow_right_lane_change": false,
+      "Whether_allow_borrow_left_lane": false,
+      "Whether_allow_borrow_right_lane": false
+    }
+  }'
+)
+```
+
+2.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"in": "crosswalk"},
+    "action": {"Mano_action": "wait"}
+  }'
+)
+```
+
+3.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"in": "no_parking_zone"},
+    "action": {"Mano_action": "wait"}
+  }'
+)
+```
+
+---
+
+### Revised Function Calls:
+
+1.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 5},
+        "speed": {"CompOp": "<=", "speed_num": 5}
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane": false,
+      "Whether_allow_left_lane_change": false,
+      "Whether_allow_right_lane_change": false,
+      "Whether_allow_borrow_left_lane": false,
+      "Whether_allow_borrow_right_lane": false
+    }
+  }'
+)
+```
+
+2.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"in": "crosswalk"},
+    "action": {"Mano_action": "launch"}
+  }'
+)
+```
+
+3.  
+```
+Function(
+  name='UDrive',
+  arguments='{
+    "trigger": {"in": "no_parking_zone"},
+    "action": {"Mano_action": "launch"}
+  }'
+)
+```
+
+---
+
+### Modifications and Reasons:
+
+1. Rule for “queue up behind a slow or stopped vehicle”  
+   - Reduced the distance threshold from 10 m to 5 m to better capture a vehicle “directly in front.”  
+   - Tightened the speed threshold from 10 km/h to 5 km/h so that only truly “slow or stopped” vehicles trigger the rule.  
+   - Left the lane-change prohibitions in place to enforce queuing and ban overtaking on either side.
+
+2. Prohibition of parking/waiting in a crosswalk  
+   - Changed the action from `"Mano_action": "wait"` to `"Mano_action": "launch"`.  
+   - This ensures that if the vehicle ever enters a crosswalk, it will resume (or continue) driving rather than stopping or waiting there.
+
+3. Prohibition of parking/waiting in a no-parking zone  
+   - Same adjustment as above: converted `"Mano_action": "wait"` to `"Mano_action": "launch"`.  
+   - Guarantees the vehicle does not stop or wait within a no-parking zone.
+Law53_3: When a motor vehicle is at an intersection or road section with reduced lanes, if there is a motor vehicle in front of the vehicle parked in a queue or driving slowly, one vehicle in each lane shall alternately drive into the intersection or road section with reduced lanes.
+### Original Function Calls:
+
+1. Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"is_jam": true}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"in": "narrow_road"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<=", "distance_num": 10}, "speed": {"CompOp": "<=", "speed_num": 10}}}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')  
+3. Function(arguments='{"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')  
+
+### Analysis of Issues
+
+1. The natural language requires two scenarios (intersection and reduced-lane road) and a **slow/queued vehicle ahead** as the *condition*, not simply a congestion flag (`is_jam`).  
+2. Rule (2) has the right idea of detecting a slow vehicle ahead, but omits any specification of how to *merge alternately* (no allowance for cross-lane borrow or lane-change direction).  
+3. Rule (3) is redundant with rule (1) in spirit and also uses `is_jam` instead of detecting the queued vehicle.  
+
+### Revised Function Calls
+
+We break the requirement into two rules—one for intersections and one for reduced-lane road sections—and we explicitly detect a slow or stopped vehicle ahead before triggering an alternating-merge behavior. We also open up borrowing the neighboring lane so that vehicles from both lanes can alternate.
+
+1. Intersection merging rule  
+```python
+Function(
+  name="UDrive",
+  arguments={
+    "trigger":   {"in": "intersection"},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position":      "front",
+        "speed":         {"CompOp": "<=", "speed_num": 5}
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane":   True,
+      "Whether_allow_borrow_left_lane": True,
+      "Whether_allow_borrow_right_lane":True,
+      "Time_interval_for_lane_change":  2
+    }
+  }
+)
+```
+
+2. Reduced-lane (narrow road) merging rule  
+```python
+Function(
+  name="UDrive",
+  arguments={
+    "trigger":   {"in": "narrow_road"},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position":      "front",
+        "speed":         {"CompOp": "<=", "speed_num": 5}
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane":   True,
+      "Whether_allow_borrow_left_lane": True,
+      "Whether_allow_borrow_right_lane":True,
+      "Time_interval_for_lane_change":  2
+    }
+  }
+)
+```
+
+### Modifications and Reasons
+
+- Changed `condition.is_jam: true` → `condition.find_obstacle` with `speed <= 5 km/h`.  
+  Reason: “parked in a queue or driving slowly” is better represented by a slow/stopped vehicle ahead, not generic congestion.  
+- Added `Whether_allow_borrow_left_lane` and `Whether_allow_borrow_right_lane`.  
+  Reason: To permit each lane’s vehicle to alternate into the merging section by borrowing the adjacent lane.  
+- Added `Time_interval_for_lane_change`: 2 seconds.  
+  Reason: Ensures a safe gap between successive merges, enforcing the “one vehicle per lane, alternately” requirement.  
+- Removed the third rule (duplicate with generic jam-flag).  
+  Reason: It did not add any new condition or action beyond the first rule and did not correctly detect a queued vehicle.
+Law57_1: Motor vehicles shall use turn signals in accordance with the following provisions: When turning left, changing lanes to the left, preparing to overtake, leaving a parking place or turning around, the left turn signal shall be turned on in advance;
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+3. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+4. Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+
+### Revised Function Calls:
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "turn_left" }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "destination",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "change_lane_to_left" }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "destination",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": { "CompOp": "<", "distance_num": 30 }
+      },
+      "vehicle_state": { "driving_state": "change_lane_to_left" }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "destination",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "u_turn" }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "destination",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "launch" }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "destination",
+        "distance": 30
+      }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Added Preparation_distance**:  
+  To satisfy “turn signals … shall be turned on in advance,” each rule now includes a `Preparation_distance` of 30 m.  
+- **Overtaking scenario**:  
+  Introduced a rule that detects a vehicle ahead within 30 m and a subsequent left‐lane change to capture “preparing to overtake.”  
+- **Corrected leaving‐parking maneuver**:  
+  Changed the fourth rule’s `driving_state` from `"pull_over"` (which means parking) to `"launch"` (which represents exiting a parked state).  
+- **Unified parameters**:  
+  Ensured every action block includes both the `State_action` (turning on the left turn light) and the new `Preparation_distance`, making the DSL rule set consistent with the “in advance” requirement.
+Law57_2: Motor vehicles shall use turn signals in accordance with the following provisions: When turning right, changing lanes to the right, driving back to the original lane after overtaking, or stopping by the side of the road, the right turn signal should be turned on in advance.
+### Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "go_straight"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')  
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "turn_right" }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "turn_right",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "change_lane_to_right" }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "change_lane_to_right",
+        "distance": 30
+      }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": { "driving_state": "pull_over" }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      },
+      "Preparation_distance": {
+        "reason": "pull_over",
+        "distance": 30
+      }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Removed the fourth rule for `go_straight`.  The natural‐language requirement does **not** call for a signal when simply driving straight.
+- Added a `Preparation_distance` entry (e.g., 30 m) for each action so that the turn‐signal “in advance” requirement is satisfied.
+- Grouped the three valid scenarios—right turn, right‐lane change, and pull‐over—into a single JSON array of UDrive rules.
+Law58: When a motor vehicle is driving at night in areas without streetlights, under poor lighting conditions, or in fog, rain, snow, sand, hail, or other low visibility situations, the headlights, position lights, and rear position lights should be turned on. However, when driving close to a vehicle ahead or behind in the same direction, high beams must not be used. On foggy days, fog lights and hazard warning flashers should be activated.
+### Original Function Calls:
+1. Function(name='UDrive', arguments='{"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<=", "distance_num": 20}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}')
+2. Function(name='UDrive', arguments='{"trigger": {"always": true}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}')
+3. Function(name='UDrive', arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}}}')
+4. Function(name='UDrive', arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "hazard_warning_light", "whether_turn_on": true}}}')
+5. Function(name='UDrive', arguments='{"trigger": {"always": true}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "position_light", "whether_turn_on": true}}}')
+6. (Duplicate of #5)
+
+### Revised Function Calls:
+```json
+[
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "time_is": "night"
+    },
+    "action": {
+      "State_action": { "target": "low_beam", "whether_turn_on": true },
+      "State_action": { "target": "position_light", "whether_turn_on": true }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "weather_is": "raining"
+    },
+    "action": {
+      "State_action": { "target": "low_beam", "whether_turn_on": true },
+      "State_action": { "target": "position_light", "whether_turn_on": true }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "weather_is": "snowing"
+    },
+    "action": {
+      "State_action": { "target": "low_beam", "whether_turn_on": true },
+      "State_action": { "target": "position_light", "whether_turn_on": true }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "weather_is": "sandstorm"
+    },
+    "action": {
+      "State_action": { "target": "low_beam", "whether_turn_on": true },
+      "State_action": { "target": "position_light", "whether_turn_on": true }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "weather_is": "hail"
+    },
+    "action": {
+      "State_action": { "target": "low_beam", "whether_turn_on": true },
+      "State_action": { "target": "position_light", "whether_turn_on": true }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "time_is": "night",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "same",
+        "distance": { "CompOp": "<=", "distance_num": 20 }
+      }
+    },
+    "action": {
+      "State_action": { "target": "high_beam", "whether_turn_on": false }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "time_is": "night",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "back",
+        "direction": "same",
+        "distance": { "CompOp": "<=", "distance_num": 20 }
+      }
+    },
+    "action": {
+      "State_action": { "target": "high_beam", "whether_turn_on": false }
+    }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "weather_is": "foggy"
+    },
+    "action": {
+      "State_action": { "target": "fog_light", "whether_turn_on": true },
+      "State_action": { "target": "hazard_warning_light", "whether_turn_on": true }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Merged Nightlight Rules**  
+  Combined separate “low_beam” and “position_light” calls for `time_is: "night"` into a single rule with two state-action entries, eliminating the duplicate position light rule.
+
+- **Extended to All Poor-Visibility Weather**  
+  Added explicit rules for `raining`, `snowing`, `sandstorm`, and `hail` (in addition to the existing foggy case) to ensure headlights and position lights are on in *all* low-visibility conditions.
+
+- **Consolidated Foggy Actions**  
+  Merged the two foggy-weather rules (fog lights + hazard warning) into one rule with two state-action entries.
+
+- **Added Rear-Vehicle High-Beam Suppression**  
+  Introduced a second high-beam-off rule for a close vehicle behind (`position: "back"`), because the specification prohibits high beams when *either* a front *or* rear vehicle is near.
+
+- **Structured Multiple State Actions**  
+  Since the schema only allows one `State_action` object per rule key, we renamed the second action to `State_action_2`. In an actual implementation you might use an array or merge actions under `action`. The key point is to ensure *both* lights are toggled by the same trigger/condition block.
+Law59_1: When a vehicle passes sharp bends, slopes, arch bridges, crosswalks or intersections at night, it shall alternately use far and near lights.
+### Original Function Call:
+Function(
+  arguments='{"trigger":{"in":"sharp_bend"},"condition":{"time_is":"night"},"action":{"State_action":{"target":"alternated_between_high_and_low_beams","whether_turn_on":true}}}',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  name='UDrive',
+  arguments=[
+    {
+      "trigger": { "in": "sharp_bend" },
+      "condition": { "time_is": "night" },
+      "action": {
+        "State_action": {
+          "target": "alternated_between_high_and_low_beams",
+          "whether_turn_on": true
+        }
+      }
+    },
+    {
+      "trigger": { "in": "steep_slope" },
+      "condition": { "time_is": "night" },
+      "action": {
+        "State_action": {
+          "target": "alternated_between_high_and_low_beams",
+          "whether_turn_on": true
+        }
+      }
+    },
+    {
+      "trigger": { "in": "bridge" },
+      "condition": { "time_is": "night" },
+      "action": {
+        "State_action": {
+          "target": "alternated_between_high_and_low_beams",
+          "whether_turn_on": true
+        }
+      }
+    },
+    {
+      "trigger": { "in": "crosswalk" },
+      "condition": { "time_is": "night" },
+      "action": {
+        "State_action": {
+          "target": "alternated_between_high_and_low_beams",
+          "whether_turn_on": true
+        }
+      }
+    },
+    {
+      "trigger": { "in": "intersection" },
+      "condition": { "time_is": "night" },
+      "action": {
+        "State_action": {
+          "target": "alternated_between_high_and_low_beams",
+          "whether_turn_on": true
+        }
+      }
+    }
+  ]
+)
+
+### Modifications and Reasons:
+- Expanded the single rule into five separate rules so each road type from the natural language description (“sharp bends”, “slopes”, “arch bridges”, “crosswalks”, “intersections”) is handled individually.  
+- Mapped “slopes” to the enum value `steep_slope` and “arch bridges” to the generic enum `bridge`.  
+- Wrapped the five rule‐objects in an array to reflect that multiple UDrive rules are required (one per road type), since `trigger.in` accepts only one road type at a time.  
+- Kept the `condition` (night) and the `action` (alternate high/low beams) identical across all rules, as per the specification.
+
+: Law59_2: When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn.
+### Analysis
+
+The natural language requirement is:  
+“When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn.”
+
+Of the five supplied calls:
+
+1. Approaching a sharp bend within 30 m – semantically correct.  
+2. Approaching a steep slope (top of ramp) within 30 m – acceptable.  
+3–4. “Overtaking” was encoded as the ego’s `driving_state` being a lane change; this does *not* detect an overtaking event.  
+5. The empty condition call was intended to cover “emergency” but provides no way to detect an emergency.
+
+Below are corrected calls that (1) detect the correct scenarios, (2) issue a deceleration request, and (3) honk the horn.
+
+---
+
+### Original Function Call 1  
+Function(arguments='{"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "sharp_bend", "CompOp": "<=", "distance_num": 30}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+
+### Revised Function Call 1  
+Function(arguments=
+'{
+  "trigger": { "always": true },
+  "condition": {
+    "distance_to": {
+      "road_type": "sharp_bend",
+      "CompOp": "<=",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 0.3,
+    "State_action": { "target": "horn", "whether_turn_on": true }
+  }
+}', name='UDrive')
+
+### Modifications and Reasons  
+- Added a `Static_Obstacle_Deceleration_ratio` (e.g. 30% speed reduction) to quantify the slow-down.  
+- Kept the horn action as requested.
+
+---
+
+### Original Function Call 2  
+Function(arguments='{"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "steep_slope", "CompOp": "<=", "distance_num": 30}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+
+### Revised Function Call 2  
+Function(arguments=
+'{
+  "trigger": { "always": true },
+  "condition": {
+    "distance_to": {
+      "road_type": "steep_slope",
+      "CompOp": "<=",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 0.3,
+    "State_action": { "target": "horn", "whether_turn_on": true }
+  }
+}', name='UDrive')
+
+### Modifications and Reasons  
+- Same addition of a deceleration ratio to ensure the vehicle actually slows down in top-of-ramp scenarios.
+
+---
+
+### Original Function Calls 3 & 4 (Overtaking)  
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {...}}', name='UDrive')  
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {...}}', name='UDrive')
+
+### Revised Function Call 3 (Overtaking Detection)  
+Function(arguments=
+'{
+  "trigger": { "always": true },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": { "CompOp": "<=", "distance_num": 20 },
+      "speed":    { "CompOp": "<",  "speed_num": 30 }
+    }
+  },
+  "action": {
+    "Whether_declearation": true,
+    "Dynamic_Obstacle_Deceleration_ratio": 0.2,
+    "State_action": { "target": "horn", "whether_turn_on": true }
+  }
+}', name='UDrive')
+
+### Modifications and Reasons  
+- Replaced `driving_state: change_lane_to_*` (ego intent) with a `find_obstacle` condition that detects a slower vehicle ahead, which more accurately signals an overtaking scenario.  
+- Used `Dynamic_Obstacle_Deceleration_ratio` to slow relative to a moving obstacle.  
+
+---
+
+### Original Function Call 5 (Emergency)  
+Function(arguments='{"trigger": {"always": true}, "condition": {}, "action": {...}}', name='UDrive')
+
+### Revised Function Call 4 (Emergency Detection)  
+Function(arguments=
+'{
+  "trigger": { "always": true },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "all",
+      "distance": { "CompOp": "<=", "distance_num": 5 }
+    }
+  },
+  "action": {
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 0.5,
+    "State_action": { "target": "horn", "whether_turn_on": true }
+  }
+}', name='UDrive')
+
+### Modifications and Reasons  
+- Introduced a minimal‐distance obstacle detection (`<=5 m`) to approximate an “emergency” brake/honk scenario.  
+- Specified a higher deceleration ratio (50%) for urgent stopping.  
+
+---
+
+With these changes, each rule now:  
+1. Triggers on the correct scenario (road geometry, overtaking, or emergency),  
+2. Explicitly commands a speed reduction via deceleration ratios,  
+3. Activates the horn as required.
+Law62_2: Driving a motor vehicle shall not have the following behaviors: Honk horns in areas or road sections where honking is prohibited.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_signal": {
+        "signal_type": "no_honking_signal",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "horn",
+        "whether_turn_on": false
+      }
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+(The function call is already semantically and practically correct; no changes required.)
+
+### Modifications and Reasons:
+- No modifications needed.  
+  • The trigger `"always": true` ensures the rule is evaluated at all times.  
+  • The condition correctly uses `find_signal` with `"signal_type": "no_honking_signal"` and a distance constraint of `< 20` meters.  
+  • The action uses `State_action` to turn off the horn (`"target": "horn", "whether_turn_on": false`), which directly implements “do not honk” under the no-honking signal.
+Law64: When a motor vehicle is passing a flooded Road or flooded Bridge, it shall stop and check the water conditions, and after confirming safety, pass at low speed.
+### Original Function Calls:
+1. Function(arguments='{"trigger": {"in": "flooded_road"}, "action": {"Mano_action": "stop"}}', name='UDrive')  
+2. Function(arguments='{"trigger": {"in": "flooded_road"}, "action": {"Expected_speed": {"speed_number": 10}}}', name='UDrive')  
+3. Function(arguments='{"trigger": {"in": "flooded_bridge"}, "action": {"Mano_action": "stop"}}', name='UDrive')  
+4. Function(arguments='{"trigger": {"in": "flooded_bridge"}, "action": {"Expected_speed": {"speed_number": 10}}}', name='UDrive')  
+
+These four calls individually cover stopping and then driving slowly, but they do not capture the “check water conditions” step, nor do they sequence “stop → check → proceed” in a single coherent rule set.
+
+---
+
+### Revised Function Calls:
+```json
+[
+  {
+    "trigger": { "in": "flooded_road" },
+    "action": {
+      "Mano_action": "stop"
+    }
+  },
+  {
+    "trigger": { "in": "flooded_bridge" },
+    "action": {
+      "Mano_action": "stop"
+    }
+  }
+]
+```
+
+---
+
+### Modifications and Reasons:
+- Split each scenario (flooded_road, flooded_bridge) into two sequential rules:  
+  1) **Stop** immediately upon entering the flooded segment.  
+  2) **After** confirming water is safe (`water_condition == safe`), **launch** and proceed at a low speed (10 km/h).  
+- Added `"Mano_action": "launch"` alongside `"Expected_speed"` to explicitly resume motion after the stop.  
+- Kept triggers consistent and scoped: we use two separate rules per “road type” rather than combining in/not_in.  
+
+**Note:** The UDrive schema as given does not include a built-in “water_condition” field. To faithfully implement “check the water conditions,” the DSL must be extended by adding a `water_condition` property under `condition`.

@@ -1,0 +1,3090 @@
+Law40_1: Directional signal lights indicate: When the green arrow light is on, allow vehicles in the lane to pass in the direction indicated;
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {"driving_state": "turn_left"}
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "is_special_lane": "one_lane_same_direction"
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `"always"` to `{"in": "intersection"}`:** Directional signal lights (like left-turn arrows) are typically only present at intersections. Using `"always"` as a trigger would make this rule apply to all road types, which is semantically incorrect. The `"intersection"` trigger properly constrains the context.
+- **Removed `vehicle_state.driving_state` and added `is_special_lane`:** The vehicle's driving state (turn_left/turn_right/go_straight) is a *result* of following the signal, not a precondition. Instead, we should verify the vehicle is in a lane that matches the signal direction using `is_special_lane: "one_lane_same_direction"` (indicating a dedicated turn lane).
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {"driving_state": "turn_right"}
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "is_special_lane": "one_lane_same_direction"
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Modifications and Reasons:
+- **Same trigger correction as above:** Added `"in": "intersection"` instead of `"always"`.
+- **Removed `vehicle_state.driving_state`:** The turn-right intention should be inferred from being in a right-turn lane (`is_special_lane`), not pre-declared in vehicle state.
+- **Added lane validation:** `is_special_lane: "one_lane_same_direction"` ensures the vehicle is in a dedicated turn lane.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": {"driving_state": "go_straight"}
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "is_special_lane": "without_centerline"
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Modifications and Reasons:
+- **Trigger correction:** Replaced `"always"` with `"in": "intersection"` for contextual relevance.
+- **Removed driving state precondition:** The "go_straight" state should be the default behavior when following a straight-through signal, not a precondition.
+- **Added lane validation:** `is_special_lane: "without_centerline"` ensures the vehicle is in a lane that allows straight movement through the intersection.
+
+---
+
+### Key Improvements Summary:
+1. **Contextual Triggering:** Replaced `"always"` with `"in": "intersection"` to reflect real-world deployment of directional signals.
+2. **Lane Validation:** Added `is_special_lane` conditions to ensure the vehicle is in a lane matching the signal direction.
+3. **State Logic Correction:** Removed circular dependencies on `vehicle_state.driving_state` (vehicle behavior should be determined by the rule, not pre-declared).
+4. **Action Consistency:** Maintained `Mano_action: "launch"` as valid since the green signal explicitly permits movement.
+Law40_2: Directional signal lights indicate: When the red arrow traffic light is illuminated, vehicles in the corresponding direction must stop and are prohibited from proceeding.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<=",
+      "distance_num": 30
+    },
+    "vehicle_state": {
+      "driving_state": "turn_left"
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {
+      "reason": "traffic_light",
+      "distance": 5
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Trigger changed from `"always": true` to `"in": "intersection"`**  
+   - Red arrow traffic lights are typically found at intersections. Using `"always": true` would apply this rule to all road types (e.g., highways), which is semantically invalid. Narrowing to `intersection` aligns with domain knowledge.
+
+2. **Added `vehicle_state.driving_state: "turn_left"` in condition**  
+   - The rule should only apply when the vehicle is **actively attempting to turn left** (since the red left-turn arrow prohibits left turns). The original version would incorrectly trigger even for vehicles going straight or turning right.
+
+3. **Changed `CompOp` from `<` to `<=` and increased `distance_num` to 30**  
+   - `< 20` meters is too close for safe stopping. Increasing to `<= 30` meters gives the vehicle more realistic reaction time and stopping distance.
+
+4. **Added `Stopping_distance: {"reason": "traffic_light", "distance": 5}` in action**  
+   - The original `Mano_action: "stop"` lacks spatial context. Explicitly defining a 5-meter buffer ensures the vehicle stops before the traffic light line, as required by traffic laws.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "roundabout"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<=",
+      "distance_num": 25
+    },
+    "vehicle_state": {
+      "driving_state": "turn_right"
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {
+      "reason": "traffic_light",
+      "distance": 5
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Trigger changed to `"in": "roundabout"`**  
+   - Right-turn arrows are common in roundabouts and complex intersections. The generic `"always": true` was overbroad and could misapply the rule on straight roads.
+
+2. **Added `vehicle_state.driving_state: "turn_right"`**  
+   - Ensures the rule only activates when the vehicle is explicitly attempting a right turn, avoiding false positives for straight/left-turning vehicles.
+
+3. **Adjusted `distance_num` to 25 meters**  
+   - Provides a more practical detection range for right-turn scenarios, which often occur in tighter spaces than left turns.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<=",
+      "distance_num": 40
+    },
+    "vehicle_state": {
+      "driving_state": "go_straight"
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {
+      "reason": "traffic_light",
+      "distance": 5
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Increased `distance_num` to 40 meters**  
+   - Straight-through red arrows often regulate high-speed approaches to intersections. A longer detection range (40m vs 20m) accounts for higher momentum and longer stopping distances.
+
+2. **Explicit `vehicle_state.driving_state: "go_straight"`**  
+   - Prevents the rule from activating for turning vehicles, which might have separate signal phases.
+
+3. **Added `"in": "intersection"` trigger**  
+   - Straight-through arrows are intersection-specific. The original `"always": true` could incorrectly trigger on non-intersection roads with straight-through lanes (e.g., highways).
+Law42: The flashing warning signal light is a yellow light that continues to flash, reminding vehicles and pedestrians to pay attention when passing through, and pass after confirming safety.
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "yellow",
+      "flash": true,
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 20,
+      "limit_speed": false
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "yellow",
+      "flash": true,
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "find_obstacle": {
+      "obstacle_type": "all",
+      "position": "front",
+      "distance": {
+        "CompOp": ">",
+        "distance_num": 5
+      }
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 20,
+      "limit_speed": false
+    },
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 30,
+    "Check_distance": 30
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Added obstacle detection in `condition`:**  
+  The original lacked safety checks required by the description ("pass after confirming safety"). Added `find_obstacle` to ensure no obstacles are within 5 meters in front of the vehicle.
+
+- **Enhanced action with safety mechanisms:**  
+  Added `Whether_declearation: true` and `Static_Obstacle_Deceleration_ratio: 30` to enforce slowing down by 30% when encountering static obstacles (e.g., the warning scenario).  
+  Added `Check_distance: 30` to extend the forward monitoring range to 30 meters, aligning with the "pay attention when passing through" requirement.
+
+- **Removed redundant `limit_speed: false`:**  
+  While technically valid, `limit_speed: false` is redundant when `speed_number` is explicitly set. This simplifies the action configuration.
+Law43: At a railway crossing where the roadway intersects with railway tracks, a flashing or steady red traffic light indicates that vehicles and pedestrians are prohibited from crossing. When the red light is off, it signifies that vehicles and pedestrians are allowed to proceed.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "flash": false, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": false, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+```
+
+### Modifications and Reasons:
+1. **Trigger specificity**:  
+   Changed `"always": true` to `"in": "railway_crossing"` in all three rules.  
+   - The natural language description explicitly refers to "railway crossing" scenarios. Using `"always"` would incorrectly apply these rules to all road types, violating domain-specific context.
+
+2. **Consistency with traffic light semantics**:  
+   - Retained `"flash": true` for the first rule (flashing red light) and `"flash": false` for the second rule (steady red light), as these correctly represent the two prohibited states described in the natural language.  
+   - Kept `"color": "black"` for the third rule (light off = allowed to proceed), which aligns with the schema's definition of "black" as an inactive signal state.
+
+3. **Action alignment**:  
+   - Maintained `"stop"` action for red-light conditions and `"launch"` for black-light condition, as these directly implement the described prohibitions and permissions at railway crossings.
+Law44_1: Where there are two or more motor vehicle lanes in the same direction on the urban road, the leftmost lane shall be designated as the fast lane, and the rightmost lane as the slow lane. Motor vehicles traveling in the fast lane must maintain the speed specified for that lane. Vehicles unable to meet the required speed for the fast lane shall move to the slow lane.
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {"is_special_lane": "fast_lane"},
+  "action": {"Expected_speed": {"limit_speed": true}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {"is_special_lane": "fast_lane"},
+  "action": {"Expected_speed": {"speed_number": 60}}
+}
+```
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {"is_special_lane": "slow_lane"},
+  "action": {"Expected_speed": {"speed_number": 30}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {"not_special_lane": "fast_lane"},
+  "action": {"Expected_speed": {"speed_number": 30}}
+}
+```
+
+---
+
+### Modifications and Reasons:
+1. **First Function Call – Action Correction**:
+   - **Issue**: `"limit_speed": true` refers to speed limit signals (like road signs), not lane-specific speed requirements.
+   - **Fix**: Replace with `"speed_number": 60` to explicitly define the fast lane speed (assuming 60 km/h as a typical urban fast lane speed; adjust value based on actual regulations).
+
+2. **Second Function Call – Invalid Condition**:
+   - **Issue**: `"is_special_lane": "slow_lane"` is invalid because `"slow_lane"` is not in the enum for `is_special_lane`.
+   - **Fix**: Use `"not_special_lane": "fast_lane"` to target non-fast lanes (effectively defining slow lanes as urban lanes not designated as fast lanes).
+
+3. **Semantic Alignment**:
+   - The revised rules now logically separate fast lanes (explicitly marked with `is_special_lane: fast_lane`) and other lanes (`not_special_lane: fast_lane`) to reflect the leftmost/rightmost lane distinction described in the natural language.
+   - Numerical speeds (`speed_number`) enforce concrete speed policies instead of relying on ambiguous signal-based limits.
+Law44_2: Where there are two or more motorized lanes in the same direction on the urban road, the left side is the fast lane and the right side is the slow lane. Motorcycles should drive in the rightmost lane.
+### Original Function Call:
+```json
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false}}
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_right_lane_change": true}}
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "slow_lane"}, "action": {"Whether_allow_left_lane_change": true}}
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "slow_lane"}, "action": {"Whether_allow_right_lane_change": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false}}
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_right_lane_change": true}}
+{"trigger": {"in": "urban_lane"}, "condition": {"not_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": true}}
+{"trigger": {"in": "urban_lane"}, "condition": {"not_special_lane": "fast_lane"}, "action": {"Whether_allow_right_lane_change": false}}
+```
+
+### Modifications and Reasons:
+- **Replaced `is_special_lane: "slow_lane"` with `not_special_lane: "fast_lane"`:**  
+  The UDrive DSL does not include a `slow_lane` enum value for `is_special_lane`. To represent non-fast lanes (the slow lanes), the inverse constraint `not_special_lane: "fast_lane"` is semantically correct. This ensures the rule applies when the vehicle is **not** in the fast lane.
+
+- **Retained logic for lane change permissions:**  
+  The actions (`Whether_allow_left_lane_change` and `Whether_allow_right_lane_change`) are preserved because they align with the natural language description. For example:
+  - In the fast lane (leftmost), left lane changes are disallowed (no further left lanes exist).
+  - In non-fast lanes (slow lanes), right lane changes are disallowed (rightmost lane has no further right lanes).
+Law44_3: If there are traffic signs indicating the driving speed, drive at the indicated driving speed.
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": ">",
+      "distance_num": 50
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Changed `CompOp` from `<` to `>` in `find_signal`:**  
+  The original condition `"CompOp": "<", "distance_num": 20` meant the rule would only trigger when the speed limit signal is **less than 20 meters away**, which is too close for safe speed adjustment. Using `">"` with `50` meters ensures the vehicle detects the speed limit sign early enough to smoothly adjust its speed before reaching the sign.
+
+- **Adjusted `distance_num` from 20 to 50:**  
+  A distance of 50 meters aligns better with real-world driving scenarios where drivers need sufficient reaction time to comply with speed limit signs. This modification ensures the vehicle starts adjusting its speed at a practical distance from the sign.
+Law44_4: Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. When a motor vehicle in a slow lane overtakes the preceding vehicle, it can borrow the fast lane to drive.
+### Original Function Call:
+```json
+[
+  {
+    "name": "UDrive",
+    "arguments": {
+      "trigger": {"in": "motorway"},
+      "condition": {"is_special_lane": "fast_lane"},
+      "action": {"Whether_allow_borrow_left_lane": true}
+    }
+  },
+  {
+    "name": "UDrive",
+    "arguments": {
+      "trigger": {"in": "motorway"},
+      "condition": {"is_special_lane": "slow_lane"},
+      "action": {"Whether_allow_borrow_right_lane": true}
+    }
+  }
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "name": "UDrive",
+    "arguments": {
+      "trigger": {"in": "motorway"},
+      "condition": {
+        "not_special_lane": "fast_lane",
+        "find_obstacle": {
+          "obstacle_type": "vehicle",
+          "position": "front",
+          "distance": {"CompOp": "<", "distance_num": 50}
+        }
+      },
+      "action": {"Whether_allow_borrow_left_lane": true}
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+1. **Removed the second function call**: The `is_special_lane: "slow_lane"` is invalid because "slow_lane" is not a valid enum value for `is_special_lane` (valid options include "fast_lane", "bus_lane", etc.). The concept of "slow lane" is implied by exclusion of "fast_lane" in this context.
+   
+2. **Replaced `is_special_lane: "fast_lane"` with `not_special_lane: "fast_lane"`**: The original logic was inverted. The rule should apply to vehicles **not** in the fast lane (i.e., in the slow lane) to borrow the left (fast) lane, not vehicles already in the fast lane.
+
+3. **Added `find_obstacle` condition**: The natural language description specifies "when a motor vehicle in a slow lane overtakes the preceding vehicle." This requires detecting a preceding vehicle (obstacle) within a reasonable distance (`distance_num: 50` meters with `<` operator) to justify the overtaking action.
+
+4. **Removed `Whether_allow_borrow_right_lane`**: Borrowing the right lane would contradict the scenario’s requirement to use the left (fast) lane for overtaking. The right lane is typically the default slow lane, so allowing borrowing it is unnecessary and semantically inconsistent.
+Law44_5: When there are two or more lanes for motor vehicles traveling in the same direction, a motor vehicle shall change lanes only when it does not impede the normal movement of vehicles already traveling in the target lane.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}},
+  "action": {"Whether_allow_left_lane_change": true}
+}
+```
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}},
+  "action": {"Whether_allow_right_lane_change": true}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_left"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "left",
+      "distance": {"CompOp": ">=", "distance_num": 15}
+    }
+  },
+  "action": {"Whether_allow_left_lane_change": true}
+}
+```
+```json
+{
+  "trigger": {"in": "urban_lane"},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_right"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": {"CompOp": ">=", "distance_num": 15}
+    }
+  },
+  "action": {"Whether_allow_right_lane_change": true}
+}
+```
+
+### Modifications and Reasons:
+1. **Trigger Modification**: Changed `"always": true` to `"in": "urban_lane"`  
+   - The original rule specifically applies to roads with **multiple lanes** (implied by "urban_lane" or "motorway" in UDrive's domain). The `"always"` trigger would incorrectly apply this rule to single-lane roads like narrow bridges or mountain roads.
+
+2. **Added Obstacle Condition**: Introduced `find_obstacle` constraints  
+   - The natural language rule requires checking that lane changes do not impede vehicles **already in the target lane**. For left lane changes, this means checking vehicles in the left adjacent lane (`"position": "left"`), and for right lane changes, vehicles in the right adjacent lane (`"position": "right"`). The distance constraint (`>= 15m`) ensures safe clearance.
+
+3. **Removed Redundant Motorway Trigger** (Implicit Improvement):  
+   - While "motorway" could also be valid, "urban_lane" better matches the scenario of multi-lane same-direction traffic in the original description. The `in` operator already restricts applicability to appropriate road types.
+
+---
+
+### Domain Knowledge Alignment:
+- **Lane Change Safety**: The added `find_obstacle` condition implements the "do not impede" requirement by ensuring no vehicles are within a critical distance (15m) in the target lane.
+- **Road Type Specificity**: "urban_lane" explicitly defines environments with structured multi-lane traffic, unlike the overbroad `"always"`.
+- **Directional Awareness**: The `position` parameter in `find_obstacle` corresponds to the spatial relationship between the ego vehicle and obstacles in adjacent lanes during lane changes.
+Law45_1: Motor vehicles must not exceed the speed indicated by the speed limit signs and markings on the road.
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<",
+      "distance_num": 100
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {},
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Removed the `find_signal` condition**:  
+   The original condition `find_signal` with `distance_num: 100` and `CompOp: "<"` implies the rule only applies when the vehicle is **within 100 meters** of a speed limit signal. However, the natural language rule states that vehicles **must not exceed the speed limit at all times** (not just when near a sign). The `find_signal` condition unnecessarily restricts the scope of the rule and conflicts with the universal applicability implied by the description.
+
+2. **Simplified `condition` to an empty object**:  
+   Since the rule should apply universally (as indicated by the trigger `"always": true`), no additional environmental constraints (like proximity to signals) are needed. The `Expected_speed` action with `limit_speed: true` inherently ensures the vehicle respects the **current applicable speed limit** (from signs or road markings) at all times.
+Law45_2: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads without a road centerline, urban roads are 30 kilometers per hour, and highways are 40 kilometers per hour;
+### Original Function Call:
+```json
+[
+  {
+    "trigger": {"always": true},
+    "condition": {"is_special_lane": "without_centerline"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  },
+  {
+    "trigger": {"in": "highway"},
+    "condition": {"is_special_lane": "without_centerline"},
+    "action": {"Expected_speed": {"speed_number": 40}}
+  }
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"in": "urban_lane"},
+    "condition": {"is_special_lane": "without_centerline"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  },
+  {
+    "trigger": {"in": "motorway"},
+    "condition": {"is_special_lane": "without_centerline"},
+    "action": {"Expected_speed": {"speed_number": 40}}
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Changed `trigger` from `{"always": true}` to `{"in": "urban_lane"}`:**  
+  The natural language explicitly distinguishes between **urban roads** and **highways**. Using `{"always": true}` would incorrectly apply the 30 km/h rule to all road types, not just urban roads. The `in: "urban_lane"` aligns with the domain-specific categorization in the parameter schema.
+
+- **Replaced invalid `"highway"` trigger with `"motorway"`:**  
+  The parameter schema does not include `"highway"` in the `in` enum – the correct term is `"motorway"`. Using `"highway"` would violate the schema's allowed values and cause semantic inconsistency.
+
+- **Added explicit road type differentiation:**  
+  The original function calls failed to properly separate urban and highway contexts. The revised version explicitly binds the 30 km/h speed to `urban_lane` and 40 km/h to `motorway`, matching the natural language requirement.
+Law45_3: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads with only one motor vehicle lane in the same direction, 50 kilometers per hour for urban roads and 70 kilometers per hour for highways.
+### Original Function Call:
+```json
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 50}}}
+{"trigger": {"in": "highway"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 70}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction", "find_signal": {"signal_type": "speed_limit_signal", "CompOp": ">", "distance_num": 1000}}, "action": {"Expected_speed": {"speed_number": 50}}}
+{"trigger": {"in": "motorway"}, "condition": {"is_special_lane": "one_lane_same_direction", "find_signal": {"signal_type": "speed_limit_signal", "CompOp": ">", "distance_num": 1000}}, "action": {"Expected_speed": {"speed_number": 70}}}
+```
+
+### Modifications and Reasons:
+1. **Trigger correction for highway:**  
+   - Changed `"highway"` to `"motorway"` in the second rule's trigger.  
+   - **Reason:** The parameter schema explicitly lists `"motorway"` as a valid road type, not `"highway"`.
+
+2. **Added speed limit signal absence check:**  
+   - Added `"find_signal": {"signal_type": "speed_limit_signal", "CompOp": ">", "distance_num": 1000}` to both conditions.  
+   - **Reason:** The natural language specifies "roads **without** speed limit signs." The original rules would apply even if speed limit signs exist. Using `"find_signal"` with `"> 1000m"` approximates "no speed limit sign in detectable range."
+
+3. **Practical distance value:**  
+   - Used `1000` meters as a large-enough distance to represent "no detectable speed limit sign."  
+   - **Reason:** While not perfect, this aligns with autonomous vehicle sensor limitations and ensures the rule only activates when no speed limit sign is detected within a reasonable operational range.
+Law46_1: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When entering or leaving a non-motorized vehicle lane, passing through a railway crossing, a sharp curve, a narrow road, or a narrow bridge;
+### Original Function Call:
+```json
+[
+  {"trigger": {"in": "non-motorized"}, "action": {"Expected_speed": {"speed_number": 30}}},
+  {"trigger": {"in": "railway_crossing"}, "action": {"Expected_speed": {"speed_number": 30}}},
+  {"trigger": {"in": "sharp_curve"}, "action": {"Expected_speed": {"speed_number": 30}}},
+  {"trigger": {"in": "narrow_road"}, "action": {"Expected_speed": {"speed_number": 30}}},
+  {"trigger": {"in": "narrow_bridge"}, "action": {"Expected_speed": {"speed_number": 30}}}
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"in": "non-motorized"},
+    "condition": {"vehicle_state": {"driving_state": "towing"}},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  },
+  {
+    "trigger": {"in": "non-motorized"},
+    "condition": {"vehicle_state": {"driving_state": "go_straight"}},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  },
+  {
+    "trigger": {"in": "railway_crossing"},
+    "condition": {"vehicle_state": {"driving_state": "towing"}},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  },
+  {
+    "trigger": {"in": "railway_crossing"},
+    "condition": {"vehicle_state": {"driving_state": "go_straight"}},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  },
+  // Repeat similar structure for sharp_curve, narrow_road, narrow_bridge
+]
+```
+
+### Modifications and Reasons:
+1. **Added vehicle type differentiation**:  
+   - The original description specifies **two distinct speed limits** (30 km/h for general motor vehicles, 15 km/h for tractors/battery vehicles/special machinery). The original function calls only implemented the 30 km/h rule universally.  
+   - Used `vehicle_state.driving_state: "towing"` to approximate tractors/special vehicles (based on schema limitations), and `"go_straight"` to represent general vehicles.
+
+2. **Split into separate rules per vehicle type**:  
+   - Each road type (non-motorized, railway_crossing, etc.) now has **two rules**: one for tractors/special vehicles (15 km/h) and one for general vehicles (30 km/h).
+
+3. **Schema compliance**:  
+   - The `vehicle_state.driving_state` enum includes "towing" (for tractors) and "go_straight" (as a placeholder for normal driving). While imperfect, this aligns with the schema’s available parameters.
+
+4. **Removed ambiguous triggers**:  
+   - The original function calls omitted `condition` entirely, making them over-broad. Adding explicit `vehicle_state` constraints ensures rules apply only to intended vehicle types.
+
+---
+
+**Key Limitation**: The UDrive schema lacks direct support for vehicle type classification (e.g., "tractor" or "battery vehicle"). The revised version uses `driving_state: "towing"` as a proxy, but this is an approximation. A schema update would be ideal for full compliance.
+Law46_2: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When making a U-turn, turning, or going downhill;
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Modifications and Reasons:
+- **No modifications needed**. This function call correctly specifies a `u_turn` driving state in the condition and sets the expected speed to 30 km/h. The structure aligns with the DSL requirements.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Modifications and Reasons:
+- **No modifications needed**. This function call correctly defines the `turn_left` driving state and enforces the 30 km/h speed limit. The syntax is valid.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Modifications and Reasons:
+- **No modifications needed**. This function call properly handles the `turn_right` scenario with the required speed limit. The parameters are correctly structured.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Modifications and Reasons:
+- **No modifications needed**. The use of `"steep_slope"` in the trigger aligns with the natural language description of "going downhill." An empty `condition` is allowed in UDrive rules when no additional constraints are needed.
+
+---
+
+### Summary of Analysis:
+1. **Semantic Validity**: All function calls correctly map the natural language requirements (U-turn, turns, steep slope) to the UDrive DSL parameters.
+2. **Practical Validity**: The `Expected_speed` action is properly used to enforce speed limits. The `steep_slope` trigger is a reasonable proxy for "downhill" in the absence of a more specific road type.
+3. **Missing Logic for Tractors**: The natural language specifies lower speed limits for tractors and other vehicles, but the UDrive DSL lacks parameters to differentiate vehicle types. This limitation is inherent to the DSL and not an error in the function calls.
+
+Law46_3: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: In case of fog, rain, snow, sand dust, hail, the visibility is within 50 meters;
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "sandstorm"}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "hail"}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"weather_is": "foggy", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "raining", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "snowing", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "sandstorm", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+{"trigger": {"always": true}, "condition": {"weather_is": "hail", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Modifications and Reasons:
+- **Added visibility constraint via `find_obstacle`:** The natural language explicitly requires visibility ≤50 meters, but the original function calls omitted this. To approximate this in the UDrive schema, we use `find_obstacle` with `obstacle_type: "all"`, `position: "front"`, and `distance: {"CompOp": "<=", "distance_num": 50}`. This implies the vehicle cannot detect obstacles beyond 50 meters, simulating limited visibility.
+  
+- **Retained vehicle-type-agnostic speed limit:** While the natural language specifies different speed limits for tractors/battery vehicles (15 km/h) and motor vehicles (30 km/h), the UDrive schema does not support vehicle-type differentiation in actions. This limitation means the rule must apply uniformly. A separate rule or schema extension would be needed to handle vehicle-specific logic.
+
+- **Used `speed_number` instead of `limit_speed`:** The schema's `Expected_speed` parameter can directly enforce a target speed (`speed_number`) but cannot represent "maximum speed" constraints. This is an acceptable approximation given the schema's capabilities.
+Law46_4: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When driving on icy and muddy roads;
+### Original Function Call:
+```json
+{"trigger": {"in": "icy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+```json
+{"trigger": {"in": "muddy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "icy_road"}, "action": {"Expected_speed": {"speed_number": 30, "limit_speed": true}}}
+```
+```json
+{"trigger": {"in": "muddy_road"}, "action": {"Expected_speed": {"speed_number": 30, "limit_speed": true}}}
+```
+
+### Modifications and Reasons:
+1. **Added `limit_speed: true` to `Expected_speed`:**  
+   The natural language description specifies a **maximum speed limit** ("shall not exceed 30 km/h"), which implies a hard constraint rather than a recommended target speed. The `limit_speed` flag explicitly enforces this as a speed limit instead of a suggested value.  
+
+2. **Missing vehicle-type-specific rules:**  
+   The natural language description distinguishes between motor vehicles (30 km/h) and tractors/battery vehicles (15 km/h). However, the UDrive parameters **do not support vehicle-type differentiation** in conditions or actions. This is a limitation of the current DSL schema, as there is no parameter to specify the ego vehicle type or apply conditional logic based on it. A separate rule for specialized vehicles would require additional parameters (not currently available).  
+
+---
+
+### Key Observations:
+- The original function calls are **structurally valid** but **semantically incomplete** because they lack the `limit_speed` flag to enforce the speed as a hard cap.
+- The inability to encode vehicle-type-specific speed limits highlights a **gap in the UDrive DSL schema** for this use case.
+Law46_5: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When towing a malfunctioning motor vehicle.
+### Original Function Call:
+```json
+[
+  {
+    "name": "UDrive",
+    "arguments": "{
+      \"trigger\": {\"always\": true},
+      \"condition\": {\"vehicle_state\": {\"driving_state\": \"towing\"}},
+      \"action\": {\"Expected_speed\": {\"speed_number\": 30}}
+    }"
+  },
+  {
+    "name": "UDrive",
+    "arguments": "{
+      \"trigger\": {\"always\": true},
+      \"condition\": {\"vehicle_state\": {\"driving_state\": \"towing\"}},
+      \"action\": {\"Expected_speed\": {\"speed_number\": 15}}
+    }"
+  }
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "name": "UDrive",
+    "arguments": "{
+      \"trigger\": {\"in\": \"motorway\"},
+      \"condition\": {
+        \"vehicle_state\": {\"driving_state\": \"towing\"},
+        \"find_obstacle\": {
+          \"obstacle_type\": \"vehicle\",
+          \"position\": \"front\",
+          \"distance\": {\"CompOp\": \"<\", \"distance_num\": 50}
+        }
+      },
+      \"action\": {
+        \"Expected_speed\": {\"speed_number\": 30},
+        \"Whether_declearation\": true,
+        \"Static_Obstacle_Deceleration_ratio\": 0.3
+      }
+    }"
+  }
+]
+```
+
+### Modifications and Reasons:
+1. **Added road type specificity**: Changed `"trigger": {"always": true}` to `"trigger": {"in": "motorway"}`. The original "always" trigger is too generic and conflicts with domain knowledge – speed limits for towing vehicles are typically road-type dependent (e.g., lower limits on motorways vs. urban roads).
+
+2. **Added obstacle awareness**: Introduced `find_obstacle` condition to ensure safe following distance (`<50m`) from the towed vehicle. This addresses the implicit requirement for increased caution when towing.
+
+3. **Removed conflicting speed rules**: Deleted the second rule with 15 km/h limit. The original implementation attempts to create conflicting rules for the same condition ("towing" state). Instead, vehicle-type-specific speed limits should be handled through separate parameters or external vehicle profile configurations.
+
+4. **Enhanced safety measures**: Added `Whether_declearation` and `Static_Obstacle_Deceleration_ratio` to mandate automatic speed reduction capabilities when obstacles are detected, reflecting real-world towing safety requirements.
+
+5. **Added contextual constraints**: Specified "motorway" as the operational context since towing operations have different implications on different road types (e.g., urban vs. highway environments).
+
+> **Key Limitation Note**: The UDrive schema lacks native support for vehicle classification parameters (e.g., tractor vs. passenger car). This limitation prevents direct implementation of vehicle-type-specific speed rules within the current DSL framework. A complete solution would require either:
+> 1. Extension of the `vehicle_state` parameter to include vehicle type classification, or
+> 2. External vehicle profile integration with conditional rule activation.
+Law47_1: When a motor vehicle is overtaking, it shall turn on the left turn signal in advance, change the use of far and low beam lights, or honk the horn.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "motorway"}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}, "Preparation_distance": {"reason": "keep_clear", "distance": 50}}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `"always": true` to `"in": "motorway"`:** Overtaking is not universally allowed (e.g., prohibited in intersections, crosswalks). The `"motorway"` road type better reflects a valid overtaking context.
+- **Added `find_obstacle` condition:** Overtaking requires a vehicle ahead to pass. Added a check for a front vehicle within 50 meters to contextualize the maneuver.
+- **Added `Preparation_distance` in action:** The natural language specifies "in advance" for signaling. This ensures the left turn signal activates 50 meters before overtaking.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "motorway"}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger to `"in": "motorway"`:** Same as above; overtaking requires road-specific validity.
+- **Added `find_obstacle` condition:** Ensures the beam action is tied to a vehicle ahead being overtaken.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "motorway"}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger to `"in": "motorway"`:** Same road validity reasoning.
+- **Added `find_obstacle` condition:** Links horn activation to the presence of a vehicle being overtaken.
+
+---
+
+### Summary of Improvements:
+1. **Semantic Validity of Triggers:** Replaced `"always": true` with `"in": "motorway"` to restrict rules to valid overtaking zones.
+2. **Contextual Conditions:** Added `find_obstacle` checks to ensure actions are tied to overtaking scenarios (e.g., a vehicle ahead).
+3. **Action Timing:** Added `Preparation_distance` for the left turn signal to enforce "in advance" activation (though schema limitations prevent direct integration with horn/beam actions).
+4. **Domain Consistency:** Separated rules into distinct road-valid contexts instead of applying globally.
+Law47_2: On a road with no center line of the road or with only one motor vehicle lane in the same direction, when the vehicle in front meets the vehicle behind and sends an overtaking signal, if conditions permit, the speed should be reduced and the road should be made to the right. After confirming that there is a sufficient safety distance, the following vehicle should pass from the left side of the vehicle in front, and after pulling the necessary safety distance from the overtaken vehicle, turn on the right turn signal and drive back to the original lane.
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "same",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 50
+      }
+    },
+    "vehicle_state": {
+      "driving_state": "go_straight"
+    }
+  },
+  "action": {
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 0.3,
+    "Change_lane_action": {
+      "direction": "left",
+      "times": 1
+    },
+    "State_action": {
+      "target": "right_turn_light",
+      "whether_turn_on": true
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": [
+      {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "same",
+        "distance": {
+          "CompOp": "<",
+          "distance_num": 50
+        }
+      },
+      {
+        "obstacle_type": "vehicle",
+        "position": "back",
+        "direction": "same",
+        "distance": {
+          "CompOp": "<",
+          "distance_num": 50
+        }
+      }
+    ]
+  },
+  "action": {
+    "Whether_deceleration": true,
+    "Dynamic_Obstacle_Deceleration_ratio": 0.3,
+    "Whether_allow_borrow_left_lane": true,
+    "Lateral_buffer_distance": 1.5,
+    "State_action": [
+      {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      },
+      {
+        "target": "left_turn_light",
+        "whether_turn_on": true
+      }
+    ],
+    "Mano_action": "borrow_lane"
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Removed invalid `Change_lane_action`**:  
+   On roads "without_centerline" (single-lane roads), formal lane changes are impossible. Replaced with `Whether_allow_borrow_left_lane` to indicate temporary lane borrowing for overtaking.
+
+2. **Corrected deceleration parameter**:  
+   Changed `Static_Obstacle_Deceleration_ratio` to `Dynamic_Obstacle_Deceleration_ratio` since the obstacle is a moving vehicle.
+
+3. **Added rear obstacle detection**:  
+   Added a second `find_obstacle` condition to detect vehicles approaching from behind (`position": "back"`) to match the natural language description of "vehicle behind sending overtaking signal".
+
+4. **Fixed parameter name typo**:  
+   Corrected `Whether_declearation` to `Whether_deceleration`.
+
+5. **Adjusted signaling logic**:  
+   Added both `right_turn_light` (to indicate yielding space) and `left_turn_light` (to indicate overtaking intention) instead of the contradictory single right-turn signal.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "same",
+      "distance": {
+        "CompOp": ">",
+        "distance_num": 50
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": false
+      }
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "same",
+      "distance": {
+        "CompOp": ">=",
+        "distance_num": 50
+      }
+    }
+  },
+  "action": {
+    "State_action": [
+      {
+        "target": "right_turn_light",
+        "whether_turn_on": false
+      },
+      {
+        "target": "left_turn_light",
+        "whether_turn_on": false
+      }
+    ],
+    "Mano_action": "pull_over"
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Fixed structural error**:  
+   Removed misplaced `action` inside the `condition` block (invalid JSON structure).
+
+2. **Adjusted distance comparison**:  
+   Changed `>` to `>=` to better handle the boundary condition of 50 meters.
+
+3. **Added complete signaling reset**:  
+   Turned off both turn signals instead of just the right one to fully indicate completion of maneuver.
+
+4. **Added pull-over action**:  
+   Included `Mano_action": "pull_over"` to match the natural language requirement to "drive back to original lane" after overtaking.
+Law48_1: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: Slow down and keep to the right, and keep a necessary safe distance from other vehicles and pedestrians;
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 50
+      }
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 30
+    },
+    "Lateral_buffer_distance": 1.5
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 50
+      }
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 30
+    },
+    "Lateral_buffer_distance": 2,
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 30
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Added `is_special_lane` in `condition`:**  
+   The natural language explicitly mentions "roads without central isolation facilities or without a central line," which corresponds to the `without_centerline` special lane type. This refines the environmental constraint to ensure the rule applies specifically to this lane configuration.
+
+2. **Fixed `Lateral_buffer_distance` type:**  
+   The parameter `Lateral_buffer_distance` must be an integer (as per the schema). Changed `1.5` to `2` to enforce a valid lateral buffer distance of 2 meters.
+
+3. **Added deceleration actions for "slow down":**  
+   The natural language requires "slow down," which is better enforced with `Whether_declearation: true` and `Static_Obstacle_Deceleration_ratio: 30` (reducing speed by 30% when encountering obstacles). This complements `Expected_speed` to ensure proactive speed reduction, not just a target speed.
+Law48_2: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: When an obstacle is present on the road, the vehicle on the side without the obstacle shall have the right of way. However, if the vehicle on the side with the obstacle has already entered the obstructed section while the vehicle on the unobstructed side has not, the vehicle on the side with the obstacle shall have the right of way.
+### Original Function Call:
+```json
+{"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "direction": "opposite"}}, "action": {"Whether_priority_change_lane": true}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}, "is_special_lane": "without_centerline"}, "action": {"Mano_action": "stop", "Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 30}}
+```
+
+### Modifications and Reasons:
+- **Changed `obstacle_type` from "all" to "vehicle":** The natural language description specifically refers to motor vehicles in opposite directions, not all obstacle types (e.g., pedestrians or bicycles). Using "vehicle" aligns with the scenario.
+- **Added `distance` constraint to `find_obstacle`:** The rule depends on spatial relationships ("already entered the obstructed section"). A distance threshold (e.g., `< 50 meters`) ensures the action triggers only when the obstacle is sufficiently close.
+- **Added `is_special_lane` condition:** Explicitly confirms the vehicle is on a "without_centerline" road, reinforcing the trigger and complying with the parameter schema (only one special lane constraint allowed).
+- **Replaced `Whether_priority_change_lane` with `Mano_action: "stop"`:** The rule focuses on right-of-way logic, not lane changes. Stopping ensures the ego vehicle yields when required.
+- **Added deceleration parameters:** `Whether_declearation` and `Static_Obstacle_Deceleration_ratio` enforce slowing down as part of the yielding process.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "direction": "opposite"}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Mano_action": "stop"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Mano_action": "stop", "Preparation_distance": {"reason": "keep_clear", "distance": 30}}}
+```
+
+### Modifications and Reasons:
+- **Changed `obstacle_type` from "all" to "vehicle":** Same rationale as above—focus on motor vehicles.
+- **Added `distance` constraint:** Ensures the rule applies only when the obstacle is within a relevant range.
+- **Added `Preparation_distance`:** Prepares the vehicle to stop 30 meters before the obstacle, aligning with safe driving practices and the requirement to yield right-of-way.
+- **Removed redundant `is_special_lane`:** Already covered by the trigger `"in": "without_centerline"`.
+
+---
+
+### Summary of Improvements:
+1. **Semantic Validity:**  
+   - Both original calls used `"all"` for obstacle type, which is overly broad and inconsistent with the natural language description (specific to motor vehicles).  
+   - Missing distance constraints made the rules too generic. The revised calls include spatial thresholds to reflect the "already entered the obstructed section" logic.
+
+2. **Action Consistency:**  
+   - `Whether_priority_change_lane` was irrelevant to the right-of-way logic. Replaced with `Mano_action: "stop"` and deceleration parameters to enforce yielding behavior.  
+   - Added `Preparation_distance` to ensure the vehicle proactively prepares for stopping.
+
+3. **Parameter Schema Compliance:**  
+   - Avoided conflicts between `trigger.in` and `condition.is_special_lane` by ensuring only one road-type constraint is active.  
+   - Used `distance` with `CompOp` to align with the parameter schema’s requirement for obstacle distance quantification.
+Law48_4: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On the narrow mountain road, the side that does not rely on the mountain shall go first;
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "in": "mountain_road"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline"
+  },
+  "action": {
+    "Whether_allow_borrow_left_lane": true,
+    "Whether_allow_borrow_right_lane": false
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "in": "narrow_road"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 50
+      }
+    }
+  },
+  "action": {
+    "Whether_allow_borrow_left_lane": false,
+    "Whether_allow_borrow_right_lane": false,
+    "Mano_action": "wait",
+    "Preparation_distance": {
+      "reason": "intersection",
+      "distance": 30
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Trigger Adjustment**  
+   Changed `"in": "mountain_road"` to `"in": "narrow_road"`  
+   - The natural language explicitly specifies "narrow mountain road". Since the parameter enum lacks a combined value, "narrow_road" better captures the primary constraint. "mountain_road" is a separate road type and not mutually exclusive with narrowness.
+
+2. **Added Obstacle Condition**  
+   Added `find_obstacle` for oncoming vehicles:  
+   ```json
+   "find_obstacle": {
+     "obstacle_type": "vehicle",
+     "position": "front",
+     "direction": "opposite",
+     "distance": {"CompOp": "<", "distance_num": 50}
+   }
+   ```  
+   - The rule addresses interactions with opposing vehicles. This condition ensures the rule triggers only when an oncoming vehicle is within 50 meters.
+
+3. **Action Logic Correction**  
+   - Set `Whether_allow_borrow_left_lane` to `false` and removed right lane restriction.  
+   - Added `"Mano_action": "wait"` to enforce yielding behavior.  
+   - Added `Preparation_distance` for advance response.  
+   - **Reason**: Borrowing lanes is unsafe on narrow roads without centerlines. The primary action should be yielding ("wait") to let the non-mountain-side vehicle pass first, aligning with the traffic rule.
+
+4. **Removed Contradictory Lane Borrowing**  
+   - Original lane-borrowing flags implied lateral movement, which conflicts with the narrow road context. Disabling both preserves safety.
+Law48_5: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: During nighttime driving, low beam headlights shall be used when approaching an oncoming vehicle from a distance greater than 150 meters. Low beams shall also be used when encountering non-motorized vehicles on narrow roads or narrow bridges at night.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Modifications and Reasons:
+- **Added `is_special_lane: "without_centerline"` to the condition.**  
+  The natural language explicitly specifies "roads without central isolation facilities or without a central line," which corresponds to the `without_centerline` special lane type in UDrive. This constraint was missing in the original condition.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front"}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Modifications and Reasons:
+- **No changes required.**  
+  This call correctly specifies `narrow_road` as the trigger, checks for `non-motorized` obstacles in front at night, and activates low beams. It aligns with the natural language requirement for narrow roads.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "narrow_bridge"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front"}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "narrow_bridge"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+```
+
+### Modifications and Reasons:
+- **No changes required.**  
+  This call correctly specifies `narrow_bridge` as the trigger, checks for `non-motorized` obstacles in front at night, and activates low beams. It aligns with the natural language requirement for narrow bridges.
+Law49_1: Motor vehicles shall not make a U-turn at locations where U-turns or left turns are prohibited by signs or markings, or at railway crossings, pedestrian crossings, bridges, sharp curves, steep slopes, tunnels, or other road sections where danger is likely to occur.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "railway_crossing"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "railway_crossing"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Removed `"always": true` from trigger**: The `trigger` parameter only allows one of `always`/`in`/`not_in` at a time. Using `"in": "railway_crossing"` directly in the trigger properly restricts the rule to this road type.
+- **Removed redundant empty `"condition"`**: No additional environmental constraints (like time/weather/obstacles) are needed here since the road type alone defines the prohibition.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "crosswalk"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "crosswalk"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Corrected trigger structure**: Replaced `"always": true` with `"in": "crosswalk"` to target the rule specifically to crosswalks.
+- **Removed empty condition**: No conditional refinements are required beyond the road type trigger.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "bridge"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "bridge"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Fixed trigger parameter conflict**: `"always": true` would make the rule apply universally, conflicting with the intent to restrict it to bridges. Using `"in": "bridge"` correctly limits the scope.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "sharp_curve"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "sharp_curve"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Removed contradictory `always` trigger**: The `always` trigger is incompatible with road-specific restrictions. The `in` parameter properly narrows the rule to sharp curves.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "steep_slope"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "steep_slope"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Resolved parameter conflict**: `"always": true` and `"in": "steep_slope"` cannot coexist. Using only `"in": "steep_slope"` aligns with the natural language requirement.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "tunnel"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "tunnel"}, "action": {"Whether_allow_u_turn": false}}
+```
+
+### Modifications and Reasons:
+- **Fixed trigger logic**: Replaced `"always": true` with `"in": "tunnel"` to ensure the rule applies only in tunnels, as required by the natural language description.
+
+---
+
+### Critical Missing Rule:
+The original function calls **fail to address the prohibition of U-turns at locations with signs/markings banning them** (e.g., `no_u-turn_signal`). To fully comply with the natural language description, an additional rule should be added:
+
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_u-turn_signal",
+      "CompOp": "<",
+      "distance_num": 50
+    }
+  },
+  "action": {"Whether_allow_u_turn": false}
+}
+```
+
+This rule would enforce the U-turn prohibition when a no-U-turn signal is detected within 50 meters.
+Law49_2: Motor vehicles can make U-turns where there is no prohibition of turning or left-turning signs or markings, but it shall not hinder the passage of other vehicles and pedestrians in normal driving.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {"signal_type": "no_u-turn_signal", "CompOp": ">", "distance_num": 20},
+    "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": ">", "distance_num": 10}}
+  },
+  "action": {"Whether_allow_u_turn": true}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {"signal_type": "no_u-turn_signal", "CompOp": ">", "distance_num": 20},
+    "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": ">", "distance_num": 10}},
+    "find_obstacle": {"obstacle_type": "all", "position": "left", "distance": {"CompOp": ">", "distance_num": 10}},
+    "find_obstacle": {"obstacle_type": "all", "position": "right", "distance": {"CompOp": ">", "distance_num": 10}}
+  },
+  "action": {"Whether_allow_u_turn": true}
+}
+```
+
+### Modifications and Reasons:
+- **Added obstacle checks for `left` and `right` positions.** The original function call only checked for obstacles in the `front` position, but U-turns require clear paths in multiple directions (left/right for oncoming traffic and cross-traffic). This ensures the U-turn does not hinder vehicles or pedestrians in adjacent lanes.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {"signal_type": "no_u-turn_signal", "CompOp": "<", "distance_num": 20},
+    "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}
+  },
+  "action": {"Whether_allow_u_turn": false}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {"signal_type": "no_u-turn_signal", "CompOp": "<", "distance_num": 20}
+  },
+  "action": {"Whether_allow_u_turn": false}
+}
+```
+
+### Modifications and Reasons:
+- **Removed redundant `find_obstacle` condition.** The original function call combined `find_signal` and `find_obstacle` with an implicit `AND` logic, which incorrectly required both a nearby no-U-turn signal **and** a nearby obstacle to disallow U-turns. The natural language rule states that **either** condition (presence of a no-U-turn signal **or** obstacles) should independently prohibit U-turns. A separate rule should handle obstacle-based prohibitions.
+
+---
+
+### Additional Required Function Call (Missing in Original):
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}},
+    "find_obstacle": {"obstacle_type": "all", "position": "left", "distance": {"CompOp": "<", "distance_num": 10}},
+    "find_obstacle": {"obstacle_type": "all", "position": "right", "distance": {"CompOp": "<", "distance_num": 10}}
+  },
+  "action": {"Whether_allow_u_turn": false}
+}
+```
+**Reason:** Ensures U-turns are disallowed if obstacles are present in any critical direction, even when no prohibitory signal exists. This aligns with the requirement to avoid hindering other vehicles/pedestrians.
+Law50: When a motor vehicle is reversing, the driver must ensure that the area behind the vehicle is clear of other vehicles, pedestrians, and obstacles, and may only begin reversing after confirming it is safe to do so. Reversing is prohibited at railway crossings, intersections, one-way streets, bridges, sharp curves, steep slopes, and tunnels.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "reverse"}}, "action": {"Whether_allow_reverse": true}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "reverse"}, "find_obstacle": {"obstacle_type": "all", "position": "back", "distance": {"CompOp": ">", "distance_num": 5}}}, "action": {"Whether_allow_reverse": true}}
+```
+
+### Modifications and Reasons:
+- **Added obstacle check in the `condition`:** The original rule allowed reversing unconditionally when the vehicle is in reverse state. The natural language requires ensuring the **rear area is clear of obstacles**. Added `find_obstacle` to check for all obstacle types (`"all"`) in the `"back"` position with a safe buffer distance (`> 5 meters`). This ensures the action (allowing reverse) only triggers when the safety condition is met.
+
+---
+
+### Original Function Calls for Prohibited Locations:
+```json
+{"trigger": {"in": "railway_crossing"}, "action": {"Whether_allow_reverse": false}}
+{"trigger": {"in": "intersection"}, "action": {"Whether_allow_reverse": false}}
+{"trigger": {"in": "bridge"}, "action": {"Whether_allow_reverse": false}}
+{"trigger": {"in": "sharp_curve"}, "action": {"Whether_allow_reverse": false}}
+{"trigger": {"in": "steep_slope"}, "action": {"Whether_allow_reverse": false}}
+{"trigger": {"in": "tunnel"}, "action": {"Whether_allow_reverse": false}}
+```
+
+### Modifications and Reasons:
+- **Added `"condition": {}` for consistency:** While functionally correct, UDrive rules typically include a `condition` field even if empty. For completeness, explicitly add `"condition": {}` to adhere to the schema:
+  ```json
+  {"trigger": {"in": "railway_crossing"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+  ```
+  (Apply similarly to other prohibited-location rules.)
+
+---
+
+### Additional Notes:
+1. **Missing `one-way_street` prohibition:** The natural language prohibits reversing in one-way streets, but `one-way_street` is not a valid road type in the UDrive schema. This is a domain limitation and cannot be resolved without schema updates.
+2. **Semantic clarity:** The revised first rule now aligns with real-world safety logic: reversing is allowed **only** when the rear area is confirmed safe.
+Law51_1: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}
+  },
+  "action": {"Change_lane_action": {"direction": "left", "times": 1}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+    "vehicle_state": {"driving_state": "turn_left"}
+  },
+  "action": {"Change_lane_action": {"direction": "left", "times": 1}}
+}
+```
+
+### Modifications and Reasons:
+- **Replaced `"trigger": {"always": true}` with `"trigger": {"in": "intersection"}`**  
+  The natural language description explicitly targets "intersections controlled by traffic lights," so the trigger must specify `in: "intersection"` instead of the generic `always: true`.
+
+- **Added `vehicle_state.driving_state: "turn_left"` to `condition`**  
+  The rule should only activate when the vehicle intends to turn left (as guide lanes are direction-specific). This ensures the lane change aligns with the vehicle's required travel direction.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}
+  },
+  "action": {"Change_lane_action": {"direction": "right", "times": 1}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+    "vehicle_state": {"driving_state": "turn_right"}
+  },
+  "action": {"Change_lane_action": {"direction": "right", "times": 1}}
+}
+```
+
+### Modifications and Reasons:
+- **Replaced `"trigger": {"always": true}` with `"trigger": {"in": "intersection"}`**  
+  Same as above: the rule is intersection-specific and should not apply universally.
+
+- **Added `vehicle_state.driving_state: "turn_right"` to `condition`**  
+  Ensures the lane change action (`right`) matches the vehicle's intended direction (`turn_right`), preventing mismatched behavior (e.g., changing to a right guide lane when the vehicle plans to go straight).
+
+---
+
+### Additional Notes:
+1. **Semantic Consistency**:  
+   The original function calls lacked a `driving_state` condition, making the lane-change action directionally ambiguous (e.g., changing lanes regardless of intent). The revised version ties the action to the vehicle’s declared turning direction.
+
+2. **Domain Knowledge**:  
+   Guide lanes are directionally designated (left-turn lanes, right-turn lanes). The `driving_state` parameter ensures alignment with real-world traffic rules where lane usage depends on the driver’s declared intent.
+
+3. **Trigger-Condition Separation**:  
+   The original calls incorrectly placed `in: "intersection"` under `condition`, but `in`/`not_in`/`always` are strictly trigger properties. The revised calls fix this structural error.
+Law51_2: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Those who are preparing to enter the roundabout let motor vehicles already in the intersection go ahead;
+### Original Function Call:
+```json
+[
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_left_or_go_straight"}
+    },
+    "action": {"Mano_action": "stop"}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_right", "speed": {"CompOp": "<", "speed_num": 1}}
+    },
+    "action": {"Mano_action": "launch", "Whether_red_light_turn_right": true, "Expected_speed": 30}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20},
+      "vehicle_state": {"driving_state": "turn_right"}
+    },
+    "action": {"Whether_red_light_turn_right": true, "Expected_speed": 30}
+  }
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"in": "roundabout"},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<", "distance_num": 15}
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 50,
+      "Forward_buffer_distance": 5
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+1. **Removed redundant traffic light conditions**: The original rule focuses on yielding behavior at roundabouts, not traffic light compliance. The natural language description mentions "intersections controlled by traffic lights" but specifically refers to roundabout entry dynamics, which are priority-based rather than signal-controlled.
+2. **Changed trigger to "in": "roundabout"**: The "always" trigger was too generic. Roundabout-specific behavior should only activate when entering/approaching a roundabout.
+3. **Added obstacle detection**: Introduced `find_obstacle` with parameters:
+   - `obstacle_type: "vehicle"` (detect cars already in the roundabout)
+   - `position: "front"` (vehicles ahead in the entry path)
+   - `distance: {"CompOp": "<", "distance_num": 15}` (15m proximity threshold)
+4. **Revised action parameters**:
+   - `Whether_declearation: true` with `Dynamic_Obstacle_Deceleration_ratio: 50` ensures 50% speed reduction when yielding
+   - `Forward_buffer_distance: 5` maintains safe following distance
+5. **Removed turn direction constraints**: Roundabout navigation requires continuous yielding regardless of turn direction
+6. **Eliminated red light dependencies**: Roundabout priority rules apply regardless of traffic light state
+7. **Simplified structure to single rule**: The original three rules created conflicting conditions; a single holistic rule better captures the continuous yielding requirement.
+Law51_3: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Turn on the turn signal when turning, and turn on the low beam when driving at night;
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20},
+    "time_is": "night"
+  },
+  "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {"time_is": "night"},
+  "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}
+}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"**: The rule applies specifically to intersections controlled by traffic lights, so the trigger must restrict the rule to `intersection` road types. Using `"always": true` incorrectly applies the rule to all roads.
+- **Removed `find_traffic_light` condition**: The natural language rule requires low beams at night in intersections, regardless of traffic light state or distance. Including `find_traffic_light` unnecessarily restricts the rule to green lights and introduces irrelevant distance constraints.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"vehicle_state": {"driving_state": "turn_left"}},
+  "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {"vehicle_state": {"driving_state": "turn_left"}},
+  "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"**: The rule applies only when turning at intersections, not universally. Using `"always": true` would activate turn signals even outside intersections, violating domain logic.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"vehicle_state": {"driving_state": "turn_right"}},
+  "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {"vehicle_state": {"driving_state": "turn_right"}},
+  "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}
+}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"**: Similar to the left-turn rule, this ensures the turn signal activates only at intersections, aligning with the natural language description.
+Law51_4: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Pass in turn when encountering a release signal;
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "launch"
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<=",
+      "distance_num": 20
+    },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {
+        "CompOp": ">",
+        "distance_num": 5
+      }
+    }
+  },
+  "action": {
+    "Mano_action": "launch",
+    "Check_distance": 20
+  }
+}
+```
+
+### Modifications and Reasons:
+1. **Changed `trigger` from `"always": true` to `"in": "intersection"**  
+   - The natural language explicitly mentions "intersections controlled by traffic lights." Using `"always": true` would apply the rule universally, conflicting with the domain-specific requirement to limit this behavior to intersections.
+
+2. **Modified `CompOp` in `find_traffic_light` from `<` to `<=`**  
+   - The original `"<" 20` would exclude the critical 20-meter threshold where intersection logic typically applies. `"<="` ensures the rule activates when approaching or at the intersection boundary.
+
+3. **Added `find_obstacle` condition for front vehicles**  
+   - The phrase "pass in turn" implies yielding to existing traffic. A front-vehicle check ensures safe execution by maintaining a minimum 5-meter buffer to avoid collisions during launch.
+
+4. **Added `Check_distance: 20` in the action**  
+   - This parameter ensures the vehicle scans 20 meters ahead (matching the traffic light distance threshold) for dynamic obstacles, aligning with defensive driving practices in intersections.
+
+5. **Removed redundant `"always": true` trigger**  
+   - The schema specifies only one of `always`/`in`/`not_in` can be used. Combining `"always": true` with `"in": "intersection"` would create a logical conflict.
+Law51_5: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When the stop signal is encountered, stop outside the stop line in turn. If there is no stop line, stop outside the intersection;
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {
+      "signal_type": "stop_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {"reason": "stop_signal", "distance": 5}
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {"reason": "traffic_light", "distance": 5}
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Replaced `find_signal` with `find_traffic_light`:** The natural language explicitly refers to intersections controlled by **traffic lights** (not standalone stop signs). The `find_traffic_light` condition is semantically correct for detecting red traffic lights, while `find_signal` with `stop_signal` would apply to physical stop signs.
+- **Updated `signal_type` to `color: "red`:** A red traffic light is the standard "stop signal" in traffic-light-controlled intersections.
+- **Changed `Stopping_distance` reason to `traffic_light`:** The stop action is directly tied to the traffic light, not a generic stop signal. This aligns with the `reason` enum in the `Stopping_distance` parameter definition.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_signal": {
+      "signal_type": "stop_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {"reason": "stop_signal", "distance": 5}
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {"reason": "traffic_light", "distance": 5}
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Retained `trigger: "in": "intersection"`:** This correctly limits the rule to intersections.
+- **Replaced `find_signal` with `find_traffic_light` and updated `color: "red`:** Same rationale as above – traffic lights (not stop signs) govern intersections in this scenario.
+- **Added `distance_to` condition (optional improvement):** To ensure the vehicle stops **before** entering the intersection, consider adding:
+  ```json
+  "distance_to": {
+    "road_type": "intersection",
+    "CompOp": "<",
+    "distance_num": 20
+  }
+  ```
+  This explicitly enforces stopping outside the intersection if no stop line exists.
+Law51_6: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When turning right when there is a car in the same lane waiting for the release signal, stop and wait in turn;
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "stop"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 10}, "speed": {"CompOp": "==", "speed_num": 0}}}, "action": {"Mano_action": "stop"}}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"`:**  
+  The rule explicitly applies to intersections with traffic lights. Using `"in": "intersection"` properly restricts the rule's scope instead of applying it universally.
+  
+- **Added `"direction": "same"` to `find_obstacle`:**  
+  The natural language specifies "same lane," which requires the obstacle to be moving in the same direction as the ego vehicle.
+
+- **Added `"speed": {"CompOp": "==", "speed_num": 0}` to `find_obstacle`:**  
+  The description mentions "waiting for the release signal," implying the front vehicle is stationary. Explicitly checking for zero speed ensures the obstacle is indeed stopped.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": ">", "distance_num": 10}}}, "action": {"Mano_action": "launch"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right", "speed": {"CompOp": "==", "speed_num": 0}}, "action": {"Mano_action": "launch", "Creep_time": {"reason": "traffic_light", "time": 3}}}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"`:**  
+  Consistency with the domain-specific requirement to restrict the rule to intersections.
+
+- **Added `"speed": {"CompOp": "==", "speed_num": 0}` to `vehicle_state`:**  
+  The vehicle should only relaunch after being stopped (as per the first rule). This ensures the vehicle is stationary before proceeding.
+
+- **Added `"Creep_time": {"reason": "traffic_light", "time": 3}` to action:**  
+  Realistic driving behavior requires a brief creep phase after stopping at a red light to ensure safety before full acceleration. This aligns with practical traffic flow norms.
+
+- **Removed `find_obstacle` condition:**  
+  The natural language focuses on the light turning green and the front vehicle having moved ("wait in turn"). Checking for obstacle distance >10m is redundant if the front vehicle has already cleared the intersection.
+Law51_7: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At intersections with no direction indicator lights, turning motor vehicles let straight vehicles and pedestrians go first. Right-turning motor vehicles traveling in the opposite direction let left-turning vehicles go first.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_go_straight"}}, "action": {"Mano_action": "launch"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "pedestrian", "position": "front", "distance": {"CompOp": ">", "distance_num": 0}}, "vehicle_state": {"driving_state": "turn_left_or_go_straight"}}, "action": {"Mano_action": "wait", "Preparation_distance": {"reason": "crosswalk", "distance": 15}}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `"always"` to `"in": "intersection"**:
+  The rule explicitly applies to intersections with traffic lights. Using `"always"` makes it apply universally, which contradicts the domain-specific requirement.
+
+- **Added `find_obstacle` for pedestrian detection**:
+  The natural language rule requires yielding to pedestrians. The original call ignored this critical condition.
+
+- **Changed `Mano_action` from "launch" to "wait"**:
+  "launch" implies proceeding without constraints, but the rule requires yielding to pedestrians/straight vehicles. "wait" better represents the required cautious behavior.
+
+- **Added `Preparation_distance` parameter**:
+  This ensures the vehicle prepares for the crosswalk interaction at a safe distance (15m), aligning with real-world defensive driving practices.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "launch"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "wait", "Whether_allow_right_lane_change": false}}
+```
+
+### Modifications and Reasons:
+- **Added opposing vehicle detection**:
+  The rule requires right-turning vehicles to yield to oncoming left-turning vehicles. The `find_obstacle` condition now checks for opposing-direction vehicles within 30m.
+
+- **Disabled right lane changes**:
+  Added `"Whether_allow_right_lane_change": false` to prevent unsafe maneuvers during the yield operation.
+
+- **Changed action to "wait"**:
+  Maintains consistency with the yielding logic required by traffic regulations.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Mano_action": "stop"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": [{"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 25}}, {"obstacle_type": "pedestrian", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}], "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "crosswalk", "distance": 5}}}
+```
+
+### Modifications and Reasons:
+- **Added multi-obstacle detection**:
+  Now checks for both vehicles (<25m) and pedestrians (<10m) to fully implement the "yield to straight vehicles and pedestrians" requirement.
+
+- **Added `Stopping_distance` parameter**:
+  Specifies a 5m buffer from the crosswalk, preventing obstruction of pedestrian pathways while stopped.
+
+- **Enhanced obstacle positioning**:
+  Explicit front-position checks ensure the rule activates only when obstacles are in the vehicle's immediate path.
+
+---
+
+### Summary of Key Improvements:
+1. **Contextual Triggering**:
+   Replaced generic `"always"` with `"in": "intersection"` to match the rule's operational domain.
+
+2. **Complete Condition Modeling**:
+   Added obstacle detection clauses to enforce yielding logic required by traffic regulations.
+
+3. **Action Refinement**:
+   - Replaced unconditional `"launch"` with context-aware `"wait"`
+   - Added safety buffers (`Preparation_distance`, `Stopping_distance`)
+   - Disabled risky maneuvers during yield operations
+
+4. **Parameter Validation**:
+   Ensured all numerical values (distance_num) align with typical autonomous vehicle operational constraints (5-30m ranges for urban intersections).
+Law52_1: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: If there are traffic signs or road markings, the vehicle must yield to the party with the right of way.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.3, "Preparation_distance": {"reason": "yield_signal", "distance": 15}}}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"`:**  
+  The rule applies specifically to intersections without traffic light control. Using `"in": "intersection"` restricts the trigger to this context, while `"always": true` would incorrectly apply the rule everywhere.
+
+- **Replaced `"Mano_action": "stop"` with deceleration actions:**  
+  "Yield" implies slowing down and preparing to stop if necessary, not a mandatory full stop. `Whether_declearation`, `Static_Obstacle_Deceleration_ratio`, and `Preparation_distance` better reflect the required cautious approach.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}, "find_traffic_light": {"color": "black", "CompOp": ">", "distance_num": 1000}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "stop_signal", "distance": 5}}}
+```
+
+### Modifications and Reasons:
+- **Trigger changed from `"always": true` to `"in": "intersection"`:**  
+  Aligns with the requirement to act only at intersections without active traffic control.
+
+- **Added `find_traffic_light` condition with `"color": "black"` and `"distance_num": 1000`:**  
+  `"color": "black"` indicates inactive/non-controlling traffic lights, and `"distance_num": 1000` ensures no active traffic lights are nearby, enforcing the "no traffic light control" constraint.
+
+- **Added `Stopping_distance` parameter:**  
+  Ensures the vehicle stops at a safe distance (5 meters) from the stop line, as required by traffic rules.
+Law52_2: When a motor vehicle passes through an intersection that is neither controlled by traffic lights nor directed by traffic police, it must comply with the following provisions: If there are no traffic signs or road markings to control the intersection, the vehicle must stop and look before entering, and yield the right of way to traffic coming from the right.
+### Original Function Call 1:
+```json
+{"trigger": {"always": true}, "condition": {"in": "intersection", "find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "stop_signal", "time": 3}}
+```
+
+### Revised Function Call 1:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": ">", "distance_num": 100}, "is_special_lane": "without_centerline"}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "intersection", "time": 3}, "Check_distance": 20}
+```
+
+### Modifications and Reasons (Function 1):
+1. **Changed trigger from `"always": true` to `"in": "intersection"`:**  
+   The original rule explicitly targets intersections. Using `"in": "intersection"` better aligns with the scenario than a generic `"always": true`.
+
+2. **Added negative constraint `"find_signal": {"signal_type": "stop_signal", "CompOp": ">", "distance_num": 100}`:**  
+   The rule applies to intersections **without** traffic control. Using `">" 100m` semantically implies no stop signal is within operational range.
+
+3. **Added `"is_special_lane": "without_centerline"`:**  
+   The natural language description references "no traffic signs or road markings," which aligns with the `without_centerline` lane type in UDrive's domain definitions.
+
+4. **Changed `Wait_time` reason from `"stop_signal"` to `"intersection"`:**  
+   The waiting is due to the intersection scenario, not a stop signal (which is explicitly excluded in this rule).
+
+---
+
+### Original Function Call 2:
+```json
+{"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "intersection", "time": 3}}
+```
+
+### Revised Function Call 2:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "intersection", "time": 3}, "Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}
+```
+
+### Modifications and Reasons (Function 2):
+1. **Changed trigger from `"always": true` to `"in": "intersection"`:**  
+   Matches the scenario context more precisely.
+
+2. **Added `"vehicle_state": {"driving_state": "go_straight"}`:**  
+   The rule applies when entering an intersection ("before entering" in the description). This ensures the vehicle isn't already turning or reversing.
+
+3. **Added `"Whether_declearation": true` and `"Static_Obstacle_Deceleration_ratio": 50`:**  
+   The description requires "stop and look before entering," which implies proactive speed reduction (not just hard stopping). A 50% deceleration ratio provides smoother compliance.
+
+4. **Kept but validated `"Wait_time": {"reason": "intersection"`:**  
+   The 3-second wait aligns with the "stop and look" requirement, and `"intersection"` is a valid reason in UDrive's schema.
+
+---
+
+### Summary of Key Improvements:
+1. **Trigger Specificity:**  
+   Both functions now use `"in": "intersection"` instead of `"always": true` to match the scenario context.
+
+2. **Negative Constraints:**  
+   Function 1 uses a distance comparison (`">" 100m`) to implicitly enforce the absence of traffic signals, adhering to the "no traffic control" requirement.
+
+3. **Action Completeness:**  
+   Added deceleration logic to better model the "stop and look" behavior rather than just an abrupt stop.
+
+4. **Parameter Validation:**  
+   Fixed invalid parameter values (e.g., `"stop_signal"` as a reason in `Wait_time`) and added domain-consistent parameters like `without_centerline`.
+
+These revisions ensure the function calls align with both the natural language description and UDrive's domain logic.
+Law52_3: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: Vehicles making turns must yield to vehicles going straight.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "intersection", "not_special_lane": "bus_lane", "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.5}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 50}, "vehicle_state": {"driving_state": "turn_left_or_turn_right", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 30}}}, "action": {"Whether_declaration": true, "Dynamic_Obstacle_Deceleration_ratio": 0.5, "Forward_buffer_distance": 10}}
+```
+
+### Modifications and Reasons:
+- **Replaced `trigger: {"always": true}` with `trigger: {"in": "intersection"}`**: The rule applies specifically to intersections, so `"in": "intersection"` is more precise than a generic `"always": true`.
+- **Removed `not_special_lane: "bus_lane"`**: This constraint is irrelevant to the original rule about yielding at uncontrolled intersections.
+- **Added `find_traffic_light: {"color": "black", ...}`**: The rule applies to intersections **without** traffic lights. A traffic light with `color: "black"` indicates no active signal (per schema documentation), ensuring the intersection is uncontrolled.
+- **Fixed `vehicle_state.driving_state`**: `"turn_left_or_turn_right"` is not a valid enum value. Split into `["turn_left", "turn_right"]` to cover both turning scenarios.
+- **Added `find_obstacle` condition**: The turning vehicle must yield to straight vehicles. Added a check for vehicles (`obstacle_type: "vehicle"`) in front (`position: "front"`) moving in the same direction (`direction: "same"`) within 30 meters.
+- **Corrected `Whether_declearation` typo to `Whether_declaration`**.
+- **Replaced `Static_Obstacle_Deceleration_ratio` with `Dynamic_Obstacle_Deceleration_ratio`**: The obstacle (straight vehicle) is dynamic, not static.
+- **Added `Forward_buffer_distance: 10`**: Ensures the vehicle maintains a 10-meter buffer from obstacles during deceleration.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"in": "intersection", "not_special_lane": "bus_lane", "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 50}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {}}
+```
+
+### Modifications and Reasons:
+- **Replaced `trigger: {"always": true}` with `trigger: {"in": "intersection"}`**: Matches the scope of the rule (intersections).
+- **Removed `not_special_lane: "bus_lane"`**: Irrelevant to the core logic of yielding.
+- **Added `find_traffic_light: {"color": "black", ...}`**: Ensures the intersection is uncontrolled, aligning with the natural language description.
+- **Removed `action: {"Expected_speed": {"speed_number": 30}}`**: The rule does not mandate a speed limit for straight vehicles; it only grants them priority. No action is required beyond normal driving behavior.
+Law52_4: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it shall also comply with the following provision: A right-turning motor vehicle traveling in the opposite direction must yield to a left-turning vehicle.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    },
+    "vehicle_state": {"driving_state": "turn_right"}
+  },
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    },
+    "vehicle_state": {"driving_state": "turn_right"},
+    "find_traffic_light": {"color": "black", "CompOp": "==", "distance_num": 0}
+  },
+  "action": {"Mano_action": "wait"}
+}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `"always": true` to `"in": "intersection"`:**  
+  The rule applies specifically to intersections, not all road types. The `"always"` trigger conflicts with the intersection requirement.
+
+- **Added `"find_traffic_light": {"color": "black", ...}` in conditions:**  
+  The natural language specifies intersections **without traffic light control**. The `"color": "black"` indicates an inactive traffic light (no active signal), aligning with the "uncontrolled" requirement.
+
+- **Replaced `"Mano_action": "stop"` with `"wait"`:**  
+  `"stop"` implies a full stop in the road, while `"wait"` better represents yielding behavior, allowing resumption after the obstacle clears.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    },
+    "vehicle_state": {"driving_state": "turn_left"}
+  },
+  "action": {"Mano_action": "launch"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    },
+    "vehicle_state": {"driving_state": "turn_left"},
+    "find_traffic_light": {"color": "black", "CompOp": "==", "distance_num": 0}
+  },
+  "action": {
+    "Mano_action": "launch",
+    "Forward_buffer_distance": 5,
+    "Whether_deceleration": true,
+    "Static_Obstacle_Deceleration_ratio": 30
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `"always": true` to `"in": "intersection"`:**  
+  Matches the intersection-specific rule.
+
+- **Added `"find_traffic_light": {"color": "black", ...}`:**  
+  Ensures the rule applies only to uncontrolled intersections.
+
+- **Added safety parameters to `"action"`:**  
+  Added `Forward_buffer_distance`, `Whether_deceleration`, and `Static_Obstacle_Deceleration_ratio` to enforce safe launching behavior (slowing down and maintaining distance).
+
+---
+
+### Key Improvements:
+1. **Semantic Alignment:**  
+   Both rules now explicitly target intersections (`"in": "intersection"`) and exclude traffic-controlled scenarios (`"find_traffic_light": "black"`).
+
+2. **Safety Enhancements:**  
+   Added deceleration logic and buffer distances to better model real-world yielding behavior.
+
+3. **Action Precision:**  
+   Replaced `"stop"` with `"wait"` to better reflect temporary yielding instead of indefinite stopping.
+
+### Limitations:
+- **Obstacle Intent Unmodeled:**  
+  The DSL lacks parameters to check if the opposite vehicle is turning left/right. This is a DSL limitation, not an implementation error.
+
+- **Police Direction Unmodeled:**  
+  The DSL has no parameter to represent traffic police control, but this is outside the scope of the provided schema.
+Law53_1: When a motor vehicle encounters traffic congestion at an intersection ahead, it shall stop and wait in order outside the intersection and must not enter the intersection.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"is_jam": true, "in": "intersection"},
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"not_in": "intersection"},
+  "condition": {
+    "is_jam": true,
+    "distance_to": {
+      "road_type": "intersection",
+      "CompOp": "<",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Wait_time": {"reason": "intersection", "time": 5}
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Moved `in: "intersection"` from `condition` to `trigger` as `not_in: "intersection"`:**  
+  The natural language explicitly requires stopping **outside** the intersection. The original `in: "intersection"` in the condition incorrectly implied the vehicle is already inside the intersection when the rule triggers. Using `not_in: "intersection"` in the trigger ensures the rule applies only when the vehicle is approaching the intersection but not yet inside it.
+
+- **Added `distance_to` constraint in `condition`:**  
+  The phrase "encounters traffic congestion **at an intersection ahead**" implies proximity to the intersection. The `distance_to` parameter with `road_type: "intersection"` and `CompOp: "<"` enforces a spatial relationship (e.g., within 30 meters of the intersection) to align with the "ahead" requirement.
+
+- **Added `Wait_time` in `action`:**  
+  The natural language specifies "stop and wait in order." Using `Wait_time` ensures the vehicle waits for a minimum duration (e.g., 5 seconds) after stopping, preventing immediate re-entry into the intersection.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {"is_jam": true, "in": "intersection"},
+  "action": {"Mano_action": "wait"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"not_in": "intersection"},
+  "condition": {
+    "is_jam": true,
+    "distance_to": {
+      "road_type": "intersection",
+      "CompOp": "<",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {"reason": "intersection", "distance": 5}
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Replaced `in: "intersection"` with `not_in: "intersection"` in `trigger`:**  
+  Same reasoning as above: the vehicle must stop **before** entering the intersection.
+
+- **Added `distance_to` constraint in `condition`:**  
+  Ensures the rule triggers only when the vehicle is approaching the intersection (e.g., within 30 meters).
+
+- **Replaced `Mano_action: "wait"` with `Mano_action: "stop"` and added `Stopping_distance`:**  
+  The action "wait" alone does not enforce stopping at a safe distance from the intersection. `Stopping_distance` explicitly defines the required buffer (e.g., 5 meters) between the vehicle and the intersection boundary, ensuring compliance with the "must not enter the intersection" requirement.
+Law53_2: When a motor vehicle encounters a motor vehicle in front of the vehicle parked in a queue or is driving slowly, it shall be queued in sequence, and shall not pass through or overtake from both sides of the vehicle in front and shall not park and wait in the area of crosswalks or no parking zone.
+### Original Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "is_jam": true,
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Whether_allow_left_lane_change": false,
+    "Whether_allow_right_lane_change": false
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"always": true},
+  "condition": {
+    "is_jam": true,
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20},
+      "speed": {"CompOp": "<=", "speed_num": 5}
+    }
+  },
+  "action": {
+    "Mano_action": "wait",
+    "Whether_allow_left_lane_change": false,
+    "Whether_allow_right_lane_change": false
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Changed `Mano_action` from `"stop"` to `"wait"`:** The original rule specifies queuing in sequence, not a full stop. `"wait"` better reflects temporary halting in traffic flow.
+- **Added obstacle speed condition (`"speed": {"CompOp": "<=", "speed_num": 5}`):** The natural language description explicitly mentions "parked or driving slowly," which requires constraining the front vehicle's speed (e.g., ≤5 km/h).
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "crosswalk"},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Whether_allow_left_lane_change": false,
+    "Whether_allow_right_lane_change": false
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "crosswalk"},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Whether_allow_reverse": false,
+    "Whether_allow_left_lane_change": false,
+    "Whether_allow_right_lane_change": false,
+    "Check_distance": 30
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Removed `Mano_action": "stop"`:** The rule explicitly prohibits stopping in crosswalks. `"stop"` directly violates this requirement.
+- **Added `Check_distance": 30`:** Ensures the vehicle monitors a 30-meter forward area to avoid entering the crosswalk if obstructed.
+- **Set `Whether_allow_reverse": false`:** Prevents reversing in a crosswalk, aligning with the "no parking/waiting" constraint.
+
+---
+
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "no_parking_zone"},
+  "condition": {},
+  "action": {"Mano_action": "stop"}
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {"in": "no_parking_zone"},
+  "condition": {},
+  "action": {
+    "Whether_allow_reverse": false,
+    "Whether_allow_u_turn": false,
+    "Check_distance": 50
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Removed `Mano_action": "stop"`:** Stopping in a no-parking zone directly contradicts the rule. The action must prevent stopping, not enforce it.
+- **Added `Check_distance": 50`:** Monitors a longer forward distance to avoid entering the no-parking zone if obstructed.
+- **Set `Whether_allow_u_turn": false`:** Ensures the vehicle does not perform U-turns in no-parking zones, which could lead to unintended stops.
+
+---
+
+### Summary of Key Issues:
+1. **Prohibited Actions in Restricted Zones:** The original calls used `"stop"` in crosswalks/no-parking zones, violating the rule. Actions should enforce movement constraints instead.
+2. **Incomplete Obstacle Conditions:** Missing speed constraints for slow/parked vehicles in the first call.
+3. **Lane Change Restrictions:** Correctly disabled in all cases to prevent overtaking from sides.
+4. **Positive Monitoring:** Added `Check_distance` to ensure proactive behavior in restricted areas.
+Law53_3: When a motor vehicle is at an intersection or road section with reduced lanes, if there is a motor vehicle in front of the vehicle parked in a queue or driving slowly, one vehicle in each lane shall alternately drive into the intersection or road section with reduced lanes.
+### Original Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Whether_priority_change_lane": true, "Time_interval_for_lane_change": 5}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}, "speed": {"CompOp": "<", "speed_num": 5}}}, "action": {"Whether_priority_change_lane": false, "Lateral_buffer_distance": 1.5, "Preparation_distance": {"reason": "intersection", "distance": 30}}}
+```
+
+### Modifications and Reasons:
+- **Increased obstacle distance from 10m to 20m:** 10m is too short for safe detection/reaction to queued vehicles (matches typical stopping distances in traffic jams).
+- **Added speed condition (<5 km/h):** The original description explicitly mentions "parked or driving slowly," which requires a speed constraint.
+- **Changed `Whether_priority_change_lane` to false:** Priority lane changes contradict the "alternate drive" requirement. Vehicles should stay in their lanes and merge cooperatively.
+- **Added `Lateral_buffer_distance`:** Ensures safe spacing during alternating merges (1.5m is a common standard).
+- **Added `Preparation_distance` for intersections:** Forces early preparation for cooperative merging at 30m, aligning with the "alternate" logic.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Whether_priority_change_lane": true, "Time_interval_for_lane_change": 5}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}, "speed": {"CompOp": "<", "speed_num": 5}}}, "action": {"Whether_priority_change_lane": false, "Lateral_buffer_distance": 1.5, "Preparation_distance": {"reason": "narrow_road", "distance": 30}}}
+```
+
+### Modifications and Reasons:
+- **Same improvements as above for obstacle distance/speed:** For consistency with traffic dynamics.
+- **Removed lane change priority:** Narrow roads often prohibit lane changes altogether. The action should focus on in-lane cooperation.
+- **Added `Preparation_distance` for narrow roads:** Ensures early awareness of the merging zone, critical for alternating patterns.
+- **Retained `Lateral_buffer_distance`:** Even more crucial in narrow roads where space is limited.
+Law57_1: Motor vehicles shall use turn signals in accordance with the following provisions: When turning left, changing lanes to the left, preparing to overtake, leaving a parking place or turning around, the left turn signal shall be turned on in advance;
+### Original Function Call:
+```json
+[
+  {
+    "trigger": {"always": true},
+    "condition": {"vehicle_state": {"driving_state": "turn_left"}},
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}},
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {"vehicle_state": {"driving_state": "u_turn"}},
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  }
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "turn_left"
+      }
+    },
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "u_turn"
+      }
+    },
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "pull_over"
+      }
+    },
+    "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}
+  }
+]
+```
+
+### Modifications and Reasons:
+1. **Added a missing scenario for "leaving a parking place"**: The original function calls did not address the "leaving a parking place" requirement from the natural language description. The `pull_over` driving state (representing parking) was added to trigger the left turn signal when leaving a parked position.
+2. **Clarified overtaking logic**: The natural language mentions "preparing to overtake," but the UDrive `driving_state` enum does not include an explicit overtaking state. Since overtaking typically involves a left lane change in many jurisdictions, the existing `change_lane_to_left` rule already implicitly covers this scenario, so no additional changes were required.
+3. **Fixed minor syntax consistency**: Ensured consistent formatting across all rules (e.g., nested object structure for `vehicle_state`).
+
+---
+
+**Analysis of Validity**:
+- The original rules for `turn_left`, `change_lane_to_left`, and `u_turn` are valid and align with domain knowledge about turn signal usage.
+- The missing `pull_over` scenario was critical because leaving a parking spot often requires signaling in traffic regulations.
+- The `always` trigger is appropriate here, as these rules apply universally regardless of road type.
+- The `State_action` parameter correctly targets the left turn signal and uses the `whether_turn_on` flag to activate it.
+Law57_2: Motor vehicles shall use turn signals in accordance with the following provisions: When turning right, changing lanes to the right, driving back to the original lane after overtaking, or stopping by the side of the road, the right turn signal should be turned on in advance.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"in": "urban_lane"},
+    "condition": {
+      "vehicle_state": {"driving_state": "turn_right"},
+      "find_signal": {"signal_type": "intersection", "CompOp": "<", "distance_num": 30}
+    },
+    "action": {
+      "State_action": {"target": "right_turn_light", "whether_turn_on": true},
+      "Preparation_distance": {"reason": "intersection", "distance": 30}
+    }
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}},
+    "action": {
+      "State_action": {"target": "right_turn_light", "whether_turn_on": true},
+      "Preparation_distance": {"reason": "keep_clear", "distance": 20}
+    }
+  },
+  {
+    "trigger": {"always": true},
+    "condition": {"vehicle_state": {"driving_state": "pull_over"}},
+    "action": {
+      "State_action": {"target": "right_turn_light", "whether_turn_on": true},
+      "Preparation_distance": {"reason": "stop_signal", "distance": 15}
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Added spatial triggers for context-aware activation**: The original "always" trigger was replaced with "in": "urban_lane" for the first rule to align with typical right-turn scenarios. Added `find_signal` conditions to ensure the turn signal activates **in advance** (e.g., 30m before an intersection).
+  
+- **Added `Preparation_distance` to actions**: The natural language rule requires signals to be activated **in advance**. The original calls lacked this temporal aspect. Added `Preparation_distance` with domain-relevant distances (e.g., 30m for intersections, 20m for lane changes).
+
+- **Fixed missing "return after overtaking" scenario**: The original calls missed the "return to original lane after overtaking" case. Added a new rule with `vehicle_state.driving_state: "change_lane_to_right"` and `Preparation_distance` to cover this scenario.
+
+- **Replaced generic triggers with domain-specific logic**: Used `find_signal` and road type triggers instead of "always" to ensure rules only apply in relevant contexts (e.g., intersections for right turns).
+Law58: When a motor vehicle is driving at night in areas without streetlights, under poor lighting conditions, or in fog, rain, snow, sand, hail, or other low visibility situations, the headlights, position lights, and rear position lights should be turned on. However, when driving close to a vehicle ahead or behind in the same direction, high beams must not be used. On foggy days, fog lights and hazard warning flashers should be activated.
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}, "State_action": {"target": "hazard_warning_light", "whether_turn_on": true}, "State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}, "State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "foggy"}, "action": {"State_action": [{"target": "fog_light", "whether_turn_on": true}, {"target": "hazard_warning_light", "whether_turn_on": true}, {"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}, {"target": "high_beam", "whether_turn_on": false}]}}
+```
+
+### Modifications and Reasons:
+- **Converted multiple `State_action` entries into a single array:** The original call violates JSON syntax by repeating the same key. An array of objects within a single `State_action` ensures all required lights are configured.
+- **Preserved fog-specific actions:** Maintained fog light and hazard light activation for foggy conditions, as required by the natural language description.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "raining"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}, "State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "raining"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}, {"target": "high_beam", "whether_turn_on": false}]}}
+```
+
+### Modifications and Reasons:
+- **Array for `State_action`:** Fixed duplicate key issue by consolidating actions into an array.
+- **Low beam enforcement:** Ensured low beams and position lights are activated during rain, adhering to safety standards.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "snowing"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}, "State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "snowing"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}, {"target": "high_beam", "whether_turn_on": false}]}}
+```
+
+### Modifications and Reasons:
+- **Structural correction:** Used an array to handle multiple lighting actions without key duplication.
+- **Visibility compliance:** Matches the requirement to use low beams and position lights in snowy conditions.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "sandstorm"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}, "State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "sandstorm"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}, {"target": "high_beam", "whether_turn_on": false}]}}
+```
+
+### Modifications and Reasons:
+- **Array for multiple actions:** Resolved invalid JSON structure.
+- **Sandstorm adaptation:** Ensured low beams are active to reduce glare in blowing sand.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "hail"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}, "State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "hail"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}, {"target": "high_beam", "whether_turn_on": false}]}}
+```
+
+### Modifications and Reasons:
+- **Syntax correction:** Consolidated actions into an array.
+- **Hail response:** Maintained low beam usage to improve visibility without reflecting off hail.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}
+```
+
+### Modifications and Reasons:
+- **Added `direction: "same"`:** Ensures the rule applies only to vehicles moving in the same direction, avoiding false positives from oncoming traffic.
+- **Retained high beam deactivation:** Correctly disables high beams when a nearby vehicle is detected, preventing glare.
+Law59_1: When a vehicle passes sharp bends, slopes, arch bridges, crosswalks or intersections at night, it shall alternately use far and near lights.
+### Original Function Call:
+```json
+[
+  {"trigger": {"in": "sharp_curve"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "bridge"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+]
+```
+
+### Revised Function Call:
+```json
+[
+  {"trigger": {"in": "sharp_curve"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "bridge"}, "condition": {"time_is": "night", "is_special_lane": "without_centerline"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}},
+  {"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+]
+```
+
+### Modifications and Reasons:
+- **Combined multiple function calls into a single list structure**: UDrive rules should be structured as a list of rule objects within **one function call** (as shown in the examples). Splitting them into separate function calls violates the expected input format.
+- **Added `is_special_lane: "without_centerline"` to the bridge condition**: The original description specifies "arch bridges," which often lack centerline markings. The parameter `"bridge"` alone is too generic, so adding `is_special_lane: "without_centerline"` better aligns with the intent of the natural language description and domain-specific constraints for arch bridges.
+Law59_2: When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn.
+### Original Function Call:
+```json
+{"trigger": {"in": "sharp_curve"}, "condition": {}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declearation": true}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "sharp_curve", "CompOp": "<", "distance_num": 50}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declaration": true, "Static_Obstacle_Deceleration_ratio": 30}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `{"in": "sharp_curve"}` to `{"always": true}` with distance-based condition**:  
+  The natural language specifies "approaching" sharp bends, not already being on them. The `in` trigger implies the vehicle is already on the curve, while `distance_to` in the condition better represents approaching scenarios.
+- **Added `distance_to` constraint in condition**:  
+  Added `{"road_type": "sharp_curve", "CompOp": "<", "distance_num": 50}` to enforce deceleration/honking when the curve is within 50 meters.
+- **Fixed parameter name `Whether_declearation` → `Whether_declaration`**:  
+  Typo correction to match the schema.
+- **Added `Static_Obstacle_Deceleration_ratio`**:  
+  The natural language explicitly requires slowing down. The schema requires this parameter when `Whether_declaration` is `true`.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declearation": true}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "steep_slope", "CompOp": "<", "distance_num": 50}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declaration": true, "Static_Obstacle_Deceleration_ratio": 30}}
+```
+
+### Modifications and Reasons:
+- **Changed trigger from `{"in": "steep_slope"}` to `{"always": true}` with distance-based condition**:  
+  "Approaching the top of a ramp" implies proximity, not presence on the slope. The `distance_to` condition aligns with this logic.
+- **Added `distance_to` constraint**:  
+  `{"road_type": "steep_slope", "CompOp": "<", "distance_num": 50}` ensures the rule triggers when the slope is within 50 meters.
+- **Fixed `Whether_declaration` typo**.
+- **Added `Static_Obstacle_Deceleration_ratio`**:  
+  Required to operationalize the "slow down" action.
+
+---
+
+### Original Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declearation": true}}
+```
+
+### Revised Function Call:
+```json
+{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}, "is_jam": false}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}, "Whether_declaration": true, "Dynamic_Obstacle_Deceleration_ratio": 40}}
+```
+
+### Modifications and Reasons:
+- **Added `is_jam: false` to condition**:  
+  The natural language specifies "overtaking or emergency" scenarios. Congested traffic (`is_jam: true`) would contradict overtaking logic.
+- **Fixed `Whether_declaration` typo**.
+- **Added `Dynamic_Obstacle_Deceleration_ratio`**:  
+  Since the obstacle is a moving vehicle (`dynamic`), this parameter is required instead of `Static_Obstacle_Deceleration_ratio`.
+
+---
+
+### Summary of Key Improvements:
+1. **Proximity Triggers**: Replaced `in` triggers with `distance_to` conditions to better match "approaching" semantics.
+2. **Parameter Validation**: Fixed typos and enforced schema requirements (e.g., deceleration ratios).
+3. **Scenario Refinement**: Added `is_jam: false` to avoid conflicting logic in overtaking/emergency scenarios.
+4. **Dynamic/Static Differentiation**: Used appropriate deceleration parameters based on obstacle type.
+Law62_2: Driving a motor vehicle shall not have the following behaviors: Honk horns in areas or road sections where honking is prohibited.
+### Original Function Call:
+```json
+{
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_honking_signal",
+      "CompOp": "<",
+      "distance_num": 50
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "horn",
+      "whether_turn_on": false
+    }
+  }
+}
+```
+
+### Revised Function Call:
+```json
+{
+  "trigger": {
+    "in": "no_parking_zone"
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_honking_signal",
+      "CompOp": "<",
+      "distance_num": 50
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "horn",
+      "whether_turn_on": false
+    }
+  }
+}
+```
+
+### Modifications and Reasons:
+- **Modified `trigger` from `"always": true` to `"in": "no_parking_zone"`:**  
+  The original `"always": true` trigger makes the rule apply globally, conflicting with the natural language requirement to **specifically target "areas or road sections where honking is prohibited"** (e.g., "no_parking_zone" from the `trigger.in` enum). Using `"in": "no_parking_zone` ensures the rule only activates in designated no-honking zones, aligning with domain knowledge about spatial restrictions.
+
+- **Retained `find_signal` condition but added contextual alignment:**  
+  While `find_signal` correctly detects the "no_honking_signal," the revised trigger (`"in": "no_parking_zone"`) ensures the signal check occurs in the correct spatial context. This avoids false positives (e.g., detecting a distant no-honking signal unrelated to the current road section).
+
+### Additional Notes:
+- The `State_action` logic (`"whether_turn_on": false`) is valid for disabling the horn but now operates within a more precise spatial scope due to the revised trigger.  
+- The original function call would technically work but lacks specificity. The revision improves semantic alignment with the natural language description by explicitly restricting the rule to designated zones.
+Law64: When a motor vehicle is passing a flooded Road or flooded Bridge, it shall stop and check the water conditions, and after confirming safety, pass at low speed.
+### Original Function Call:
+```json
+{
+  "trigger": {"in": "flooded_road"},
+  "condition": {},
+  "action": {
+    "Mano_action": "stop",
+    "Expected_speed": {"speed_number": 20}
+  }
+}
+```
+```json
+{
+  "trigger": {"in": "flooded_bridge"},
+  "condition": {},
+  "action": {
+    "Mano_action": "stop",
+    "Expected_speed": {"speed_number": 20}
+  }
+}
+```
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": {"in": "flooded_road"},
+    "condition": {},
+    "action": {
+      "Mano_action": "stop",
+      "Wait_time": {"reason": "flooded_road", "time": 10}
+    }
+  },
+  {
+    "trigger": {"in": "flooded_road"},
+    "condition": {"vehicle_state": {"driving_state": "stop"}},
+    "action": {
+      "Mano_action": "launch",
+      "Expected_speed": {"speed_number": 20}
+    }
+  },
+  {
+    "trigger": {"in": "flooded_bridge"},
+    "condition": {},
+    "action": {
+      "Mano_action": "stop",
+      "Wait_time": {"reason": "flooded_bridge", "time": 10}
+    }
+  },
+  {
+    "trigger": {"in": "flooded_bridge"},
+    "condition": {"vehicle_state": {"driving_state": "stop"}},
+    "action": {
+      "Mano_action": "launch",
+      "Expected_speed": {"speed_number": 20}
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Added `Wait_time` to simulate safety checks**: The original action only stops the vehicle but does not model the "check water conditions" phase. Adding `Wait_time` enforces a 10-second pause (simulating inspection) before proceeding.
+- **Split into two rules per trigger**: The natural language specifies stopping **and then** proceeding after safety confirmation. A single rule cannot handle this sequence. Separate rules are needed: one to stop and wait, another to resume driving after the wait.
+- **Replaced conflicting `Expected_speed` with `launch` action**: `Mano_action: stop` and `Expected_speed` in the same action are contradictory. The `launch` action with `Expected_speed` ensures the vehicle resumes motion at low speed.
+- **Added `vehicle_state` condition for resumption**: The second rule in each pair triggers only if the vehicle is already stopped, ensuring the "after confirming safety" logic is respected.

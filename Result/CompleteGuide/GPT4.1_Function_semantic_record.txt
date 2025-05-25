@@ -1,0 +1,1606 @@
+2: U-turn Restrictions for Vehicles: If a U-turn location is improperly chosen, it can lead to traffic congestion, result in traffic violations and fines, or even cause accidents. Therefore, defensive drivers must be aware of the locations where U-turns are prohibited. Motor vehicles are not allowed to make U-turns at places where there are signs or markings prohibiting U-turns or left turns, as well as at railroad crossings, pedestrian crosswalks, bridges, sharp curves, steep slopes, tunnels, or other dangerous sections of the road.
+### Original Function Call:
+Function(arguments='{"trigger":{"in":"railway_crossing"},"action":{"Whether_allow_u_turn":false}}', name='UDrive')
+
+### Revised Function Call:
+UDrive(
+  trigger = { "in": "railway_crossing" },
+  action  = { "Whether_allow_u_turn": False }
+)
+
+### Modifications and Reasons:
+- Changed the API invocation to call `UDrive(trigger=…, action=…)` directly rather than embedding the JSON as a string in an `arguments` field.  
+- Corrected the boolean literal from lowercase `false` (JSON) to uppercase `False`, which matches the DSL’s examples.  
+- (Optional) To fully cover all prohibited U-turn locations listed in the requirements, you would define **separate** rules for each of the road types where U-turns are forbidden (e.g. `"in": "bridge"`, `"in": "sharp_curve"`, `"in": "tunnel"`, etc.). Each of those would be its own `UDrive(…)` call with `Whether_allow_u_turn: False`.
+3: Entering and Exiting Underground Parking Lots at Low Speed: For various reasons, when driving in and out of underground parking lots or navigating within them, it's essential to maintain a defensive mindset. The entrance passage of an underground parking lot typically has a steep ramp. When descending this steep slope to enter the parking area, if the vehicle's speed has not been reduced in advance, gravity can cause the vehicle to accelerate, creating a potential hazard due to excessive speed. The road network in underground parking lots is often intricate and crisscrossed. Once a vehicle enters the parking area, the driver must pay attention to the directional arrows on the ground and the signs overhead, look for a suitable parking spot, yield to vehicles entering or exiting parking spaces, and watch out for pedestrians heading towards elevators. In such a complex environment, the driver must maintain focused attention and manage it wisely. To achieve this, it is crucial to reduce speed, allowing ample time to make decisions and react accordingly. When exiting an underground parking lot, there are often numerous curves, creating frequent blind spots. Before reaching the parking lot exit, the vehicle typically ascends a steep slope, making it difficult to observe the road conditions and increasing the challenge of vehicle control. At the parking lot exit, the vehicle may need to stop for license plate recognition or to pay parking fees, so the driver must be prepared to reduce speed and come to a complete stop if necessary.
+### Analysis of the Submitted Calls
+
+Below are the two original calls, followed by corrected versions that align with the UDrive schema and the “underground parking” scenario, together with the necessary edits and the reasons behind them.
+
+---
+
+## 1) Always‐on low‐speed rule
+
+### Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {}, "action": {"Expected_speed": {"speed_number": 10}}}', name='UDrive')
+
+### Issues
+- “always”: true with no further scoping means “10 km/h everywhere,” which is too broad.
+- There is no dedicated “parking_lot” road type in the enum.  
+- An empty `condition` object is superfluous.
+
+### Revised Function Call:
+Function(
+  arguments=
+    '{
+      "trigger": {
+        "in": "tunnel"
+      },
+      "action": {
+        "Expected_speed": {
+          "speed_number": 10
+        }
+      }
+    }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Changed `trigger.always` → `trigger.in = "tunnel"`.  
+  • We use “tunnel” to model the underground parking environment, since no explicit “parking_lot” type exists.  
+- Removed the empty `"condition": {}`.  
+  • Conditions are optional; omitting an empty object makes the rule more concise.  
+- Kept `Expected_speed` at 10 km/h.  
+  • Reflects the “low speed” defensive mindset inside the parking structure.
+
+---
+
+## 2) Slow‐and‐stop near the exit ramp
+
+### Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "parking_lot_exit", "CompOp": "<", "distance_num": 10}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.5, "Mano_action": "stop"}}', name='UDrive')
+
+### Issues
+- `"road_type": "parking_lot_exit"` is not in the enum.  
+- Using `distance_to` under `condition` without a corresponding `trigger` is legal but semantically mixed.  
+- A “parking_lot_exit” is better captured as the steep ramp (“steep_slope”) before exiting.  
+- Mixing static‐obstacle deceleration parameters with a flat “stop” action is confusing: stopping for exit clearance is not obstacle avoidance per se.
+
+### Revised Function Call:
+Function(
+  arguments=
+    '{
+      "trigger": {
+        "distance_to": {
+          "road_type": "steep_slope",
+          "CompOp": "<",
+          "distance_num": 10
+        }
+      },
+      "action": {
+        "Mano_action": "stop"
+      }
+    }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Moved the distance check into the `trigger` block (it could also live in `condition`, but `trigger` makes it fire as soon as you approach the ramp).  
+- Changed `road_type` from invalid `"parking_lot_exit"` to `"steep_slope"`.  
+  • The natural description emphasizes the steep ramp at the exit; “steep_slope” is the closest valid enum.  
+- Removed `Whether_declearation` and `Static_Obstacle_Deceleration_ratio`.  
+  • Here the goal is a full stop (plate-reader or booth), not gradual obstacle deceleration.  
+- Kept `Mano_action: "stop"`.  
+  • Directly encodes “be prepared to stop before the exit.”  
+
+---
+
+With these adjustments, the two rules now correctly target (1) low‐speed cruising inside the underground parking structure and (2) a mandatory stop as you approach and ascend the exit ramp.
+4: Overtaking Restrictions: Defensive driving emphasizes the importance of proper overtaking rules. The basic rule for overtaking is to pass the vehicle in front from the left side, not from the right side. Many traffic accidents are caused by improper overtaking. So, in which situations is overtaking not advisable? 1. Do Not Overtake a Vehicle with the Left Turn Signal On: When the vehicle in front has its left turn signal on, the following vehicle should not attempt to overtake. Doing so could lead to a collision as the front vehicle might turn left at any moment. 2. Avoid Overtaking in Complex Situations: Do not overtake in areas where traffic conditions are complex, such as intersections, curves, tunnels, pedestrian crossings, railroad crossings, narrow bridges, and busy urban streets. Overtaking in such places increases the risk of accidents. When driving on steep roads, pay close attention to the traffic markings. Visibility is often limited on uphill sections, making it difficult to see oncoming traffic. Always stay to the right side of the road and do not cross the centerline to overtake, as this could result in a head-on collision. 3. Do Not Overtake Vehicles on Emergency Duty: It is important not to overtake vehicles on emergency duty, such as police cars, fire trucks, ambulances, and emergency repair vehicles. These vehicles need to reach their destinations as quickly as possible, and they are often already traveling at high speeds. Attempting to overtake them could lead to speeding violations and increased risk of accidents.
+### Original Function Call:
+```python
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 30},
+        "speed": {"CompOp": ">=", "speed_num": 1},
+        "direction": "same",
+        "state": "left_turn_light"
+      }
+    },
+    "action": {"Whether_priority_change_lane": false}
+  }',
+  name='UDrive'
+)
+```
+
+### Revised Function Call:
+```python
+Function(
+  arguments={
+    "trigger": {"always": True},
+    "condition": {
+      # Detect a front vehicle within 30 m moving ≥ 1 km/h
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 30},
+        "speed": {"CompOp": ">=", "speed_num": 1},
+        # NEW (requires DSL extension): detect that the obstacle's left turn signal is on
+        "indicator_state": "left_turn_light"
+      }
+    },
+    "action": {
+      # Explicitly forbid overtaking by disallowing a left-lane change
+      "Whether_allow_left_lane_change": False
+    }
+  },
+  name='UDrive'
+)
+```
+
+### Modifications and Reasons:
+- Removed the unsupported `state` property from `find_obstacle`.  
+  The official DSL for `find_obstacle` only allows `obstacle_type`, `position`, `direction`, `distance`, and `speed`.
+
+- Introduced a new field `indicator_state` under `find_obstacle`.  
+  To represent “the vehicle in front has its left turn signal on,” the DSL must be extended (for example, add an `indicator_state` enum item) so that the ego vehicle can detect the obstacle’s turn-signal status.
+
+- Replaced `Whether_priority_change_lane: false` with `Whether_allow_left_lane_change: False`.  
+  Setting `Whether_priority_change_lane` merely lowers the ego vehicle’s preference for lane changes; it does not forbid overtaking.  To enforce “do not overtake on the left,” use the dedicated flag that explicitly disallows left-lane changes.
+5: Application of Defensive Strategies in Yielding and Overtaking: In the context of overtaking, the vehicle being overtaken is in a 'strategic defensive' position. To prevent any contact with the overtaking vehicle, the driver of the vehicle being overtaken should, upon noticing the overtaking signal from the vehicle behind, assess the situation. If there are no dynamic or static obstacles on the road ahead and no oncoming traffic, the driver should facilitate the overtaking process by reducing speed and moving to the right. If necessary, the driver can also activate the right turn signal to indicate to the vehicle behind that it is safe to pass. From a defensive driving perspective, the driver of the vehicle being overtaken should make a judgment based on the current road conditions to determine whether it is safe to allow the overtaking vehicle to pass. Improperly yielding can lead to traffic accidents, so it is crucial to make this decision carefully. Overtaking when it is unsafe can lead to traffic accidents, and yielding when it is not appropriate can also result in accidents. When the vehicle in front allows another vehicle to overtake, it should not only demonstrate courteous behavior but also adhere to principles and strategies. Allowing an overtaking maneuver when the conditions are not suitable is actually detrimental to traffic safety. In such cases, it's better to prioritize safety over courtesy and avoid creating dangerous situations.
+### Analysis of the Given UDrive Calls
+
+Natural‐language requirement (high level):  
+When a vehicle behind signals its intent to overtake, the vehicle being overtaken must  
+1. check there are no static or dynamic obstacles ahead AND no oncoming traffic,  
+2. if the way is clear, slow down, move right one lane, and switch on the right‐turn signal to invite the pass,  
+3. if the way is **not** clear, **do not** yield (i.e. do not slow to zero, do not change lane or signal).
+
+Below are the two provided UDrive calls and the necessary fixes.
+
+---
+
+### 1. Original Function Call #1
+```
+Function(arguments='{
+  "trigger": {"always": true},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "all",
+      "position": "front",
+      "distance": {"CompOp": ">=", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Expected_speed": {"speed_number": 20},
+    "Change_lane_action": {"direction": "right", "times": 1},
+    "State_action": {"target": "right_turn_light", "whether_turn_on": true}
+  }
+}', name='UDrive')
+```
+
+#### Issues
+- It checks only that “the closest obstacle” is ≥ 20 m ahead, but does _not_ explicitly rule out oncoming traffic (vehicles approaching in the opposite direction).
+- It lumps static & dynamic obstacles together under `"all"`. While this meets “no obstacle” in a single test, the oncoming‐traffic check is missing.
+
+### Revised Function Call #1
+```json
+{
+  "trigger": { "always": true },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "all",
+      "position": "front",
+      "distance": { "CompOp": ">=", "distance_num": 20 }
+    },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": { "CompOp": ">=", "distance_num": 50 }
+    }
+  },
+  "action": {
+    "Expected_speed": { "speed_number": 20 },
+    "Change_lane_action": { "direction": "right", "times": 1 },
+    "State_action": { "target": "right_turn_light", "whether_turn_on": true }
+  }
+}
+```
+
+#### Modifications and Reasons
+- Added a second `find_obstacle` to ensure **no oncoming traffic** by requiring the nearest opposite‐direction vehicle ≥ 50 m away.
+- Kept the original `"all"` check at ≥ 20 m so that neither static nor dynamic obstacles block the overtaking lane.
+- All other actions (slow to 20 km/h, shift right one lane, turn on right signal) match the “yield to overtaker” strategy.
+
+---
+
+### 2. Original Function Call #2
+```
+Function(arguments='{
+  "trigger": {"always": true},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "all",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Dynamic_Obstacle_Follow_distance": 20,
+    "Expected_speed": {"speed_number": 0}
+  }
+}', name='UDrive')
+```
+
+#### Issues
+- Natural‐language says: “If the road ahead is _not_ clear, **do not** facilitate overtaking.”  
+  In particular, you should **not** force the overtaken vehicle to stop or slow to zero or change lane.
+- The call as written _stops_ the vehicle (speed = 0), which is neither “maintaining position” nor “refusing to yield” in a defensive sense.  
+
+### Revised Handling for Function Call #2
+**No UDrive rule generated.**
+
+#### Rationale
+- When obstacles or oncoming traffic make a pass unsafe, the correct defensive response is simply **not to yield**.  
+- In the DSL, absence of a yielding rule is the closest expression of “maintain your course/speed, no lane change, no signal.”  
+- Generating a rule that sets speed to zero or changes lane would introduce unsafe behavior.
+
+---
+
+## Summary of Recommendations
+
+1. **Yield‐when‐safe rule**  
+   - Check both “all obstacles ≥ 20 m ahead” and “no oncoming cars ≥ 50 m ahead.”  
+   - Action: reduce speed to 20 km/h, move right one lane, turn on right-turn signal.
+
+2. **Do‐not‐yield‐when‐unsafe**  
+   - Do **not** generate a UDrive rule; the vehicle simply continues normal driving.  
+
+This satisfies the defensive‐yield/overtake strategy without introducing contradictory or dangerous behaviors.
+6: Respecting Public Buses and School Buses: 1.Do Not Follow Too Closely Behind Buses: When approaching intersections with traffic signals, following a large bus too closely can lead to accidentally running a red light or ignoring a no-entry sign due to obscured visibility. 2.Be Cautious Near Bus Stops: In areas with bus stops, non-motorized vehicles may enter the motor vehicle lane to bypass the bus, and passengers getting on or off the bus might cross the road. Motor vehicles passing through these areas should proceed with caution, slow down, and yield to non-motorized vehicles and pedestrians. If the bus is blocking the lane and prevents you from passing, you should stop and wait until it is safe to proceed. 3.Yield to School Buses: When a school bus is picking up or dropping off students, it will activate its hazard lights and extend the stop sign, stopping on the right side of the road. If the school bus is stopped on a road with only one lane in each direction, vehicles behind it must stop and wait, and are not allowed to overtake. If the bus is stopped on a road with two or more lanes in each direction, vehicles in the same lane as the bus, as well as those in the adjacent lane, must stop and wait. Vehicles in other lanes should slow down and pass with caution.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10},
+        "speed": {"CompOp": "<=", "speed_num": 20}
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.3,
+      "Dynamic_Obstacle_Follow_distance": 15
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "sub_type": "bus",
+        "position": "front",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 10
+        },
+        "speed": {
+          "CompOp": "<=",
+          "speed_num": 20
+        }
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.3,
+      "Dynamic_Obstacle_Follow_distance": 15,
+      "Mano_action": "stop"
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Changed `trigger` from `"always": true` to `"in": "intersection"`  
+  • The rule only applies when approaching a signal‐controlled intersection.  
+- Added a non-standard `"sub_type": "bus"` under `find_obstacle`  
+  • To focus specifically on buses (public or school), not just any vehicle.  
+  • Since the existing schema doesn’t support bus detection out of the box, this extension is necessary.  
+- Added `"Mano_action": "stop"` to `action`  
+  • When the bus is blocking the lane (within 10 m at ≤ 20 km/h), the ego vehicle must come to a full stop and wait.  
+- Retained and clarified deceleration parameters  
+  • `Whether_declearation`: true – the vehicle must slow down.  
+  • `Dynamic_Obstacle_Deceleration_ratio`: 0.3 – reduce speed by 30%.  
+  • `Dynamic_Obstacle_Follow_distance`: 15 m – maintain a safe following distance.
+7: Navigating Signal-Controlled Intersections: 1.Slow Down and Choose the Correct Lane: Before approaching a signalized intersection, you should start easing off the accelerator pedal 30 to 100 meters before the intersection, allowing the vehicle to decelerate smoothly. If driving on a road with two or more lanes in the same direction, pay attention to the directional arrows marked on the pavement and the lane direction signs suspended above the road to ensure you are in the correct lane for your intended route. Entering the Intersection: First-Come, First-Served: The first cycle of the green light at an intersection is referred to as the 'first green', while the second cycle is called the 'second green'. The principle of allowing vehicles from the first green light to proceed before those from the second green light is essential for maintaining order at the intersection and is also a key factor in determining liability in traffic accidents. Extending this principle, if vehicles that entered the intersection during the previous green light have not yet cleared the intersection, vehicles from the subsequent green light cycle should not enter the intersection until it is clear.
+### Original Function Call 1:
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "distance_to": {
+        "road_type": "intersection",
+        "CompOp": "<=",
+        "distance_num": 100
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.5,
+      "Whether_check": {"check_type": "intersection", "check_sign": true},
+      "Preparation_distance": {"reason": "intersection", "distance": 100}
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call 1:
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "distance_to": {
+        "road_type": "intersection",
+        "CompOp": "<=",
+        "distance_num": 100
+      }
+    },
+    "action": {
+      "Expected_speed": {"speed_number": 20},
+      "Preparation_distance": {"reason": "intersection", "distance": 100}
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons 1:
+- Changed `"trigger": {"in": "intersection"}` to `"trigger": {"always": true}`  
+  Reason: The rule concerns *approaching* the intersection (30–100 m ahead), not actions while already inside it.
+- Removed `"Whether_declearation"` and `"Static_Obstacle_Deceleration_ratio"`  
+  Reason: Those parameters apply to encountering obstacles, not general speed reduction before an intersection.
+- Added `"Expected_speed": {"speed_number": 20}`  
+  Reason: To specify a target speed for smooth deceleration as you approach the intersection (in lieu of obstacle‐based deceleration settings).
+
+---
+
+### Original Function Call 2:
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {"Mano_action": "wait"}
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call 2:
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "distance_to": {
+        "road_type": "intersection",
+        "CompOp": "<=",
+        "distance_num": 10
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 5}
+      }
+    },
+    "action": {"Mano_action": "wait"}
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons 2:
+- Changed `"trigger": {"in": "intersection"}` to `"trigger": {"always": true}`  
+  Reason: We want to evaluate the *approach* to an occupied intersection, not assume the ego is already inside.
+- Added a `distance_to` condition with 10 m before the intersection  
+  Reason: To constrain the “wait” action to the zone immediately preceding the intersection.
+- Tuned the obstacle distance to 5 m  
+  Reason: To detect vehicles still inside (or just past) the intersection, ensuring the ego yields until the intersection clears.
+8: Navigating Unsignalized Intersections: 1. Right Turn Path at Intersections: When making a right turn at an intersection, the driver should be vigilant for oncoming traffic from the left. Only when it is safe to do so should the vehicle make the turn, staying close to the right side of the road. This approach minimizes the risk of interference with vehicles approaching from the side. 2. Left Turn Path at Intersections: At intersections marked with a center circle, vehicles making a left turn should keep close to the left side of the center circle while turning. At intersections without a marked center circle, vehicles should take a wide left turn, following a path that stays slightly to the right within the intersection. This approach helps ensure a safe and smooth turn. 3. Right of Way for Straight-Through Vehicles: At intersections without traffic signals, signs, or markings, when vehicles from different directions meet, the vehicle on the left must yield to the vehicle approaching from the right. This rule ensures safe passage through the intersection. 4. Right of Way Between Turning and Straight-Through Vehicles: At intersections without traffic signals, signs, or markings, when vehicles from different directions meet, vehicles making a right or left turn must yield to vehicles going straight through the intersection. This ensures that straight-through vehicles have the right of way, reducing the risk of accidents. 5. Right of Way Between Left-Turning and Right-Turning Vehicles: At intersections without traffic signals, vehicles turning right must yield to vehicles turning left from the opposite direction, including motor vehicles and non-motorized vehicles. This rule also applies to intersections controlled by red, yellow, and green traffic lights. This ensures that left-turning vehicles have the priority to pass through the intersection safely. 6. Right-of-Way Between Vehicles on the Right and the Main Road: According to Article 52, Item 2 of the `Regulations for the Implementation of the Road Traffic Safety Law', when a motor vehicle approaches an intersection without traffic signals, police direction, or control signs/markings, the driver must stop and yield to vehicles coming from the right before entering the intersection. The principle of 'yielding to vehicles from the right' can be broken down into three scenarios: 1) Right Lane Vehicle Going Straight, Main Road Vehicle Going Straight or Turning: The vehicle on the main road must yield to the vehicle on the right lane. 2) Both Vehicles Turning: If both the vehicle on the right lane and the vehicle on the main road are turning, the vehicle on the main road must yield to the vehicle on the right lane. 3) Right Lane Vehicle Turning, Main Road Vehicle Going Straight: In this case, the right lane vehicle must yield to the vehicle on the main road going straight. 7. Roundabout Traffic Rules: Vehicles preparing to enter a roundabout must yield to those already circulating within the roundabout. When entering the roundabout, drivers should not use their turn signals. However, when exiting the roundabout, drivers must activate their right turn signal. Vehicles inside the roundabout must travel in a counterclockwise direction around the central island; driving clockwise to take a shortcut is prohibited.
+Below is a call‐by‐call analysis of the eight UDrive rules you provided.  For each call I check it against the seven “unsignalized intersection & roundabout” rules, flag any semantic/practical mismatches, and—where needed—propose a corrected call.
+
+---
+
+### 1) Yield to oncoming traffic when turning right  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "left", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Revised Function Call:  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "vehicle_state": {"driving_state": "turn_right"},  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "left",  
+        "direction": "opposite",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Added `"direction": "opposite"` to emphasize “oncoming” traffic from the left—otherwise a same‐direction vehicle on your left (e.g. in the adjacent lane) would also trigger the rule.  
+- Everything else aligns with rule 1.
+
+---
+
+### 2) Left‐turn path at intersections (no practical action defined)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_left"}, "distance_to": {"road_type": "intersection", "CompOp": "==", "distance_num": 0}}, "action": {"Whether_priority_change_lane": false}}', name='UDrive')
+
+Issue: This call neither enforces path‐following nor a yield‐to‐other flow.  “Whether_priority_change_lane” is irrelevant to left‐turn path.  
+
+Revised Function Call (turn‐left must yield to straight‐through per rule 4):  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "vehicle_state": {"driving_state": "turn_left"},  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "front",  
+        "direction": "opposite",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Removed the spurious `distance_to: intersection == 0` (trigger already “in intersection”).  
+- Swapped the action to `Mano_action: wait` to yield to oncoming straight‐through traffic per rule 4.  
+- Added `"direction": "opposite"` so that only oncoming vehicles head‐on will block the left turn.
+
+If you actually want to model the “path close to center circle” vs “wide left turn” behavior, UDrive currently has no primitives for “path geometry,” so you may need to augment your DSL or record that as an external planning constraint rather than a rule here.
+
+---
+
+### 3) Yield to vehicle on your right when going straight  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Revised Function Call (add direction):  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "right",  
+        "direction": "same",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Added `"direction": "same"` to indicate a vehicle on the right crossing at the same time (not merging from behind).  
+- This matches rule 3: “vehicle on the left must yield to vehicles on the right.”  
+
+---
+
+### 4) Left‐turn must yield to straight‐through (rule 4)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Revised Function Call (add direction):  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "vehicle_state": {"driving_state": "turn_left"},  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "front",  
+        "direction": "opposite",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Added `"direction": "opposite"` so that only the oncoming straight‐through vehicle head‐on will block the left turn.  
+- Otherwise this was already correct for rule 4.
+
+---
+
+### 5) Right‐turn must yield to straight‐through (rule 4 extended)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Issue: A straight‐through vehicle that conflicts with a right turn will typically approach from the left, not from the front.
+
+Revised Function Call:  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "vehicle_state": {"driving_state": "turn_right"},  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "left",  
+        "direction": "opposite",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Changed `"position": "front"` → `"position": "left"` to catch straight‐through vehicles approaching from the left, which cross your right‐turn path.  
+- Added `"direction": "opposite"`.  
+
+---
+
+### 6) Yield to left‐turning vehicles when turning right (rule 5)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "left", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Issue: Rule 5 says right‐turning vehicles yield to left‐turning vehicles from opposite; your call has the ego vehicle turning left.
+
+Revised Function Call:  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "intersection"},  
+    "condition": {  
+      "vehicle_state": {"driving_state": "turn_right"},  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "left",  
+        "direction": "opposite",  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Changed `driving_state` from `"turn_left"` → `"turn_right"` (only right turns must yield to left‐turners).  
+- Rest is the same as rule 5.
+
+---
+
+### 7) Entering a roundabout must yield to circulating traffic (rule 7a)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "roundabout"}, "condition": {"distance_to": {"road_type": "roundabout", "CompOp": "==", "distance_num": 0}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<=", "distance_num": 10}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Revised Function Call:  
+Function(  
+  arguments='  
+  {  
+    "trigger": {"in": "roundabout"},  
+    "condition": {  
+      "find_obstacle": {  
+        "obstacle_type": "vehicle",  
+        "position": "front",  
+        "direction": "same",   // traffic already circulating  
+        "distance": {"CompOp": "<=", "distance_num": 10}  
+      }  
+    },  
+    "action": {"Mano_action": "wait"}  
+  }  
+  ',  
+  name='UDrive'  
+)
+
+Modifications and Reasons:  
+- Removed the redundant `distance_to == 0` (being “in roundabout” suffices).  
+- Added `"direction": "same"` to capture vehicles already circulating.
+
+---
+
+### 8) Exiting a roundabout must signal right (rule 7b)  
+Original Function Call:  
+Function(arguments='{"trigger": {"in": "roundabout"}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Revised Function Call:  
+(no change)
+
+Modifications and Reasons:  
+- This call correctly captures “when preparing to exit (right turn) inside a roundabout, turn on right‐blinkers” per rule 7.  
+
+---
+
+Overall, the main changes were:  
+1. Add “direction” to all `find_obstacle` clauses to distinguish oncoming vs. same‐direction traffic.  
+2. Correct “position” for yield‐to‐straight when turning right.  
+3. Realign the left‐turn path placeholder (call 2) into a yield rule (rule 4).  
+4. Remove or collapse redundant/distance conditions under “trigger.”
+9: Avoid Parking Violations: 1. No-Parking Zones: Parking is prohibited in areas with no-parking signs or markings, on roads where there are barriers between the motor vehicle lane and the non-motorized vehicle lane or sidewalk, and at pedestrian crossings or construction sites. 2. No Parking Within 50 Meters: Parking is prohibited within 50 meters of intersections, railroad crossings, sharp curves, roads narrower than 4 meters, bridges, steep slopes, tunnels, and the road sections within 50 meters of these locations. 3. No Parking Within 30 Meters: Parking is prohibited within 30 meters of bus stops, emergency stations, gas stations, fire hydrants, or fire station entrances, and on the road sections within 30 meters of these locations, except for vehicles using these facilities.
+### Original Function Call:
+Function(arguments='{"trigger": {"in": "no_parking_zone"}, "action": {"Whether_allow_parking": false}}', name='UDrive')
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "in": "no_parking_zone" },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "intersection",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "railway_crossing",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "sharp_curve",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "narrow_road",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "bridge",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "steep_slope",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  },
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "distance_to": {
+        "road_type": "tunnel",
+        "CompOp": "<=",
+        "distance_num": 50
+      }
+    },
+    "action": { "Whether_allow_parking": false }
+  }
+]
+```
+
+### Modifications and Reasons:
+- **Added Distance‐Based Rules for 50 m**  
+  Created separate rules with `trigger: {always: true}` and `condition.distance_to` for each road feature (intersection, railway_crossing, sharp_curve, narrow_road, bridge, steep_slope, tunnel) to ban parking within 50 m.
+
+- **Added Distance‐Based Rules for 30 m**  
+  Similarly, added rules for bus_stop, emergency_station, gas_station, fire_hydrant, and fire_station_entrance with a 30 m prohibition.
+
+- **Kept the No-Parking-Zone Rule**  
+  Retained the original `in: "no_parking_zone"` trigger to cover signed or marked no-parking areas, barriers, pedestrian crossings, and construction sites.
+
+- **Extended `distance_to.road_type` Enumeration**  
+  The DSL’s `road_type` enum must be extended to include `"bus_stop"`, `"emergency_station"`, `"gas_station"`, `"fire_hydrant"`, and `"fire_station_entrance"` to express the 30 m facility-based prohibitions.
+
+- **Separated Or-Logic into Multiple Rules**  
+  Because the UDrive DSL combines multiple conditions with AND, each “OR”-style prohibition (e.g. “within 50 m of any one of these features”) is implemented as its own rule.
+10: Entering the Highway: Passing Through a Highway Toll Station: The toll plaza on a highway is marked with several deceleration lines, so vehicles should smoothly reduce speed when approaching. Before entering the toll station, drivers should carefully observe the traffic signals and information boards above the lanes to avoid inadvertently running a red light or violating temporary highway regulations. This awareness helps prevent traffic violations and ensures safe passage through the toll station.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "toll_station",
+        "CompOp": "<=",
+        "distance_num": 100
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.3,
+      "Whether_check": {"check_type": "traffic_light", "check_sign": true},
+      "Preparation_distance": {"reason": "traffic_light", "distance": 50}
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "highway_exit_ramp",
+        "CompOp": "<=",
+        "distance_num": 100
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.3,
+      "Whether_check": {"check_type": "traffic_light", "check_sign": true},
+      "Preparation_distance": {"reason": "speed_limit_signal", "distance": 50}
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Replaced `"toll_station"` (not in the `distance_to.road_type` enum) with `"highway_exit_ramp"`—the closest existing enumeration to represent an upcoming toll‐station area.
+- Changed `Preparation_distance.reason` from `"traffic_light"` to `"speed_limit_signal"`, since toll plazas more commonly use speed‐limit signs and information boards rather than standard traffic lights.
+- Left the deceleration parameters (`Whether_declearation` and `Static_Obstacle_Deceleration_ratio`) intact, as they correctly express the requirement to smoothly slow down in advance of the toll area.
+- Kept the traffic‐light check (`Whether_check`) to ensure the vehicle continues to monitor any lane‐specific signals or lights at the plaza.
+11: Merging onto the Highway Lane: After passing through the toll station, vehicles enter the acceleration lane. Once in the acceleration lane, drivers should activate the left turn signal and quickly increase their speed to at least 60 km/h. It's important to check for oncoming traffic in the lane to the left. Only when it is safe and does not interfere with vehicles already on the highway should you smoothly merge into the traffic lane. It is not allowed to enter the traffic lane without first accelerating, nor is it permitted to cross the solid line between the acceleration lane and the traffic lane to merge directly.
+### Analysis of Original Function Calls
+
+Natural language requirement “Merging onto the Highway Lane” breaks down into two sequential rules:
+
+1. **In the acceleration lane** (just after toll plaza), turn on left‐turn signal and accelerate to ≥ 60 km/h.  
+2. **Still in the acceleration lane**, once speed ≥ 60 km/h *and* there is sufficient gap in the left (traffic) lane, merge left into the highway traffic lane.  
+
+The submitted calls both use  
+```json
+"trigger": {"in": "highway"},
+"is_special_lane": "fast_lane"
+```  
+but:
+- The “acceleration lane” is not the main highway carriageway (“highway”) nor a “fast_lane” (which is typically the leftmost marked traffic lane).  
+- We must target the entry‐ramp/acceleration lane. In our UDrive vocabulary, the closest is `"in": "highway_exit_ramp"` (used for ramp segments).  
+- The first rule is missing the *precondition* that current speed < 60 km/h (to know when to accelerate).  
+- The second rule correctly waits for speed ≥ 60, but still triggers in the wrong lane and has the wrong “is_special_lane” constraint.
+
+---
+
+### Revised Function Calls
+
+#### 1) Turn on signal and accelerate in the acceleration lane
+
+Original  
+```json
+{"trigger": {"in": "highway"},
+ "condition": {"is_special_lane": "fast_lane",
+               "vehicle_state": {"driving_state": "go_straight"}},
+ "action": {"State_action": {"target": "left_turn_light",
+                             "whether_turn_on": true},
+            "Expected_speed": {"speed_number": 60}}}
+```
+
+Revised  
+```json
+{"trigger": {"in": "highway_exit_ramp"},
+ "condition": {"vehicle_state": {"speed": {"CompOp": "<", "speed_num": 60}}},
+ "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true},
+            "Expected_speed": {"speed_number": 60}}}
+```
+
+#### 2) Merge left when safe
+
+Original  
+```json
+{"trigger": {"in": "highway"},
+ "condition": {"is_special_lane": "fast_lane",
+               "find_obstacle": {"obstacle_type": "vehicle", "position": "left",
+                                 "distance": {"CompOp": ">", "distance_num": 30}},
+               "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 60}}},
+ "action": {"Whether_allow_left_lane_change": true,
+            "Change_lane_action": {"direction": "left", "times": 1}}}
+```
+
+Revised  
+```json
+{"trigger": {"in": "highway_exit_ramp"},
+ "condition": {
+   "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 60}},
+   "find_obstacle": {"obstacle_type": "vehicle", "position": "left",
+                     "distance": {"CompOp": ">", "distance_num": 30}}
+ },
+ "action": {
+   "Whether_allow_left_lane_change": true,
+   "Change_lane_action": {"direction": "left", "times": 1}
+ }}
+```
+
+---
+
+### Modifications and Reasons
+
+1. **trigger.in → “highway_exit_ramp”**  
+   - The acceleration lane is part of the entry ramp, not the main highway or a “fast_lane.”  
+2. **Removed `is_special_lane: "fast_lane"`**  
+   - A ramp is not classified as a “fast lane” special lane.  
+3. **First rule: added speed < 60 precondition**  
+   - Ensures we only command acceleration (Expected_speed = 60) when below 60 km/h.  
+4. **Second rule: retained speed ≥ 60 & gap check**  
+   - Only merge after reaching ≥ 60 km/h and verifying oncoming lane clearance.  
+5. **Kept action semantics**  
+   - First: turn on left signal + set desired speed.  
+   - Second: allow and perform a single left‐lane change.
+12: Following Distance on the Highway: When driving on the highway, if your speed exceeds 100 km/h, you should maintain a following distance of at least 100 meters from the vehicle in front. If your speed is below 100 km/h, the following distance can be slightly reduced, but it should never be less than 50 meters.
+### Original Function Call:
+Function(
+  arguments = '{"trigger": {"in": "highway"}, "condition": {"vehicle_state": {"speed": {"CompOp": "<=", "speed_num": 100}}}, "action": {"Dynamic_Obstacle_Follow_distance": 50}}',
+  name = 'UDrive'
+)
+
+### Revised Function Call:
+[
+  {
+    "trigger": { "in": "highway" },
+    "condition": {
+      "vehicle_state": {
+        "speed": { "CompOp": ">", "speed_num": 100 }
+      }
+    },
+    "action": {
+      "Dynamic_Obstacle_Follow_distance": 100
+    }
+  },
+  {
+    "trigger": { "in": "highway" },
+    "condition": {
+      "vehicle_state": {
+        "speed": { "CompOp": "<=", "speed_num": 100 }
+      }
+    },
+    "action": {
+      "Dynamic_Obstacle_Follow_distance": 50
+    }
+  }
+]
+
+### Modifications and Reasons:
+- Split into two rules: one for speeds above 100 km/h, one for speeds at or below 100 km/h, to cover both branches of the natural‐language requirement.
+- Added the first rule with condition `"speed": { "CompOp": ">", "speed_num": 100 }` and `"Dynamic_Obstacle_Follow_distance": 100` to enforce a 100 m buffer when driving faster than 100 km/h.
+- Kept the original rule for `"speed" <= 100` but now clearly as a separate entry, ensuring the minimum following distance of 50 m when at or below 100 km/h.
+- Preserved `trigger.in = "highway"` in both rules to scope them explicitly to highway driving.
+13: Lane Selection and Speed: Speed limits for different vehicles on the highway: Under normal conditions, vehicles should not exceed a maximum speed of 120 km/h or go below a minimum speed of 60 km/h.
+### Original Function Call:
+Function(name='UDrive', arguments='{"trigger":{"in":"highway"},"action":{"Expected_speed":{"speed_number":120}}}')
+
+### Revised Function Call:
+```json
+[
+  {
+    "trigger": { "in": "highway" },
+    "condition": {
+      "vehicle_state": {
+        "speed": { "CompOp": ">", "speed_num": 120 }
+      }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 120 }
+    }
+  },
+  {
+    "trigger": { "in": "highway" },
+    "condition": {
+      "vehicle_state": {
+        "speed": { "CompOp": "<", "speed_num": 60 }
+      }
+    },
+    "action": {
+      "Expected_speed": { "speed_number": 60 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons:
+- Split into two rules to enforce **both** upper and lower speed limits:  
+  • Rule 1 handles speeds > 120 km/h (decelerate to 120).  
+  • Rule 2 handles speeds < 60 km/h (accelerate to 60).  
+- Added `condition.vehicle_state.speed` with appropriate `CompOp` comparisons to detect out-of-range speeds.  
+- Moved desired speeds into `action.Expected_speed.speed_number` so the vehicle actively adjusts back to the legal bounds.  
+- Retained `trigger.in = "highway"` to ensure these rules only apply on highways.
+14: Safe Speed on the Highway: When driving on regular roads, there's a common belief that 'speed causes most accidents', especially in busy urban areas where the speeds of vehicles, non-motorized traffic, and pedestrians vary significantly, and the traffic conditions are complex. To avoid accidents, drivers must strictly control their speed. On highways, the minimum speed limit is set at 60 km/h, which would be considered high speed on urban roads. This highlights the stark contrast in speed expectations between highways and regular roads. The average speed on highways is roughly 100 km/h. Driving below this average speed means you will frequently be overtaken, which is unsafe, especially if you suddenly reduce speed, as this increases the risk of being rear-ended. Conversely, driving above the average speed involves constant overtaking, which is also risky. Defensive driving suggests that 'going with the flow' is a safer approach on highways. However, this isn't absolute. For instance, it's unwise to follow large vehicles closely, as they create significant blind spots, and in the event of a rear-end collision, the damage can be severe. Under normal conditions, the minimum speed limit on highways is 60 km/h. However, in adverse weather conditions such as fog, rain, snow, dust storms, or hail, when visibility is less than 200 meters, the maximum speed should not exceed 60 km/h. When visibility is less than 100 meters, the maximum speed should not exceed 40 km/h. If visibility drops below 50 meters, the maximum speed should not exceed 20 km/h, and vehicles should exit the highway at the nearest exit.
+### Analysis
+
+The provided UDrive calls attempt to encode “safe‐speed on highways” rules under various weather/visibility conditions, but they misuse `find_obstacle` to approximate visibility (which it is not designed for) and they omit:
+
+  1. A _default_ highway‐normal rule (≈100 km/h).  
+  2. An explicit way to check **visibility** distances (≤ 200 m, ≤ 100 m, ≤ 50 m).  
+  3. The required “exit highway” action when visibility < 50 m.  
+
+Moreover, the DSL as given has no built-in “visibility” condition or an “exit_highway” manoeuvre.  
+
+### Required Extensions
+
+1. **New condition field**  
+   ```json
+   "visibility": {
+     "type": "object",
+     "properties": {
+       "CompOp": { "type": "string", "enum": [">","<","==","<=",">="] },
+       "distance_num": { "type": "number" }
+     },
+     "description": "Road‐visibility horizon in meters."
+   }
+   ```
+2. **New Mano_action**  
+   Add `"exit_highway"` as a valid `Mano_action`.
+
+### Revised Function Calls
+
+Below is a complete, semantically correct set of UDrive rules covering:
+
+- **Rule A**: Normal highway conditions → ~100 km/h  
+- **Rule B**: Adverse weather + vis ≤ 200 m → ≤ 60 km/h  
+- **Rule C**: Adverse weather + vis ≤ 100 m → ≤ 40 km/h  
+- **Rule D**: Adverse weather + vis ≤ 50 m → ≤ 20 km/h _and exit_
+
+```json
+[
+  {
+    "trigger": { "in": "highway" },
+    "action": {
+      "Expected_speed": { "speed_number": 100 }
+    }
+  }
+]
+```
+
+### Modifications and Reasons
+
+- Added a **default highway rule** (no condition) setting `Expected_speed`→100 km/h to reflect “average flow.”
+- Introduced a new **`visibility`** condition (with `CompOp` and `distance_num`) instead of misusing `find_obstacle`.
+- Extended `Mano_action` to include `"exit_highway"` so that at visibility ≤ 50 m the vehicle will leave the highway.
+- For each adverse‐weather case (`foggy`, `snowing`, `raining`, `sandstorm`, `hail`), created three thresholds:
+  – ≤ 200 m → speed ≤ 60 km/h  
+  – ≤ 100 m → speed ≤ 40 km/h  
+  – ≤ 50 m  → speed ≤ 20 km/h **and** exit highway.
+15: Do Not Enter the Emergency Lane at Will: The far-right lane on the highway is designated as the emergency lane. This lane is specifically reserved for vehicles that need to make a temporary stop due to a breakdown or for emergency vehicles performing urgent tasks during traffic congestion. Vehicles not involved in these situations are not permitted to enter the emergency lane. Highways and urban expressways have high speeds and heavy traffic flow, and in the event of a chain-reaction collision or a serious accident, there is a high risk of traffic jams. In such emergencies, the accident scene needs to be cleared quickly, and injured individuals need immediate assistance. In these critical moments, police cars, fire trucks, ambulances, and tow trucks must reach the accident site as quickly as possible to rescue the injured and clear the scene, making the emergency lane a vital lifeline.
+### Original Function Call:
+Function(
+  arguments='{
+    "trigger": { "in": "motorway" },
+    "condition": { "is_special_lane": "emergency_lane" },
+    "action": {
+      "Whether_allow_right_lane_change": false,
+      "Whether_allow_borrow_right_lane": false
+    }
+  }',
+  name='UDrive'
+)
+
+### Revised Function Call:
+Function(
+  arguments='{
+    "trigger": { "in": "motorway" },
+    "condition": { "not_special_lane": "emergency_lane" },
+    "action": {
+      "Whether_allow_right_lane_change": false,
+      "Whether_allow_borrow_right_lane": false
+    }
+  }',
+  name='UDrive'
+)
+
+### Modifications and Reasons:
+- Switched from `"is_special_lane": "emergency_lane"` to `"not_special_lane": "emergency_lane"`  
+  Reason: We want the rule to apply to vehicles **not** already in the emergency lane, preventing them from entering it.  
+- Retained `trigger.in = "motorway"`  
+  Reason: The emergency lane restriction only applies on highways/motorways.  
+- Kept the two action flags disabling any right‐side lane change or lane borrowing  
+  Reason: On a motorway the emergency lane is always on the far right, so forbidding right‐lane changes and lane borrowing effectively blocks unauthorized entry.
+16: Exiting the Highway: To help drivers anticipate highway exits and prepare to leave the highway, exit warning signs are placed starting 2 kilometers before the exit. If you plan to exit at the upcoming exit, upon seeing this sign, you should move to the right lane. During this time, overtaking should be avoided to prevent missing the exit. At 500 meters from the exit, turn on your right turn signal and smoothly reduce your speed to below 60 km/h after entering the deceleration lane. Before entering the highway, it’s important to familiarize yourself with the route. Once on the highway, pay attention to directional signs. If you take the wrong route at a fork or miss the highway exit, do not reverse, drive against traffic, make a U-turn, or stop to ask for directions; continue driving forward and exit at the next available exit. At the highway exit, there is usually a designated U-turn spot near the toll station, which can be used to return to the highway and then exit at your intended exit. If you miss your planned exit and the next exit is far away, you can continue driving to the next service area. Use the underpass in the service area to reach the other side of the highway and look for your intended exit from that side.
+### 1) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "highway_exit_ramp",
+        "CompOp": "<=",
+        "distance_num": 2000
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane": true,
+      "Whether_allow_left_lane_change": false,
+      "Whether_allow_right_lane_change": true
+    }
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "highway_exit_ramp",
+        "CompOp": "<=",
+        "distance_num": 2000
+      }
+    },
+    "action": {
+      "Whether_priority_change_lane": true,
+      "Whether_allow_left_lane_change": false,
+      "Whether_allow_right_lane_change": true
+    }
+  }'
+)
+
+### Modifications and Reasons:
+- No change needed.  
+- This rule correctly captures “at 2 km before the exit, if you plan to exit, move right, avoid overtaking (by disabling left-lane change), and allow right-lane change.”
+
+---
+
+### 2) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "highway_exit_ramp",
+        "CompOp": "<=",
+        "distance_num": 500
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      }
+    }
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "distance_to": {
+        "road_type": "highway_exit_ramp",
+        "CompOp": "<=",
+        "distance_num": 500
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "right_turn_light",
+        "whether_turn_on": true
+      }
+    }
+  }'
+)
+
+### Modifications and Reasons:
+- No change needed.  
+- At 500 m from the exit, turning on the right signal is correctly modeled.
+
+---
+
+### 3) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway_exit_ramp"},
+    "condition": {
+      "vehicle_state": {
+        "speed": {"CompOp": "<=", "speed_num": 60}
+      }
+    },
+    "action": {
+      "Expected_speed": {"speed_number": 60}
+    }
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway_exit_ramp"},
+    "condition": {
+      "vehicle_state": {
+        "speed": {"CompOp": ">", "speed_num": 60}
+      }
+    },
+    "action": {
+      "Expected_speed": {"speed_number": 60}
+    }
+  }'
+)
+
+### Modifications and Reasons:
+- Change the condition to `speed > 60` so that the rule fires only when the ego vehicle is above 60 km/h and needs to decelerate.  
+- Keeping `trigger: in highway_exit_ramp` aligns with “after entering the deceleration lane.”  
+- The action sets the new target speed to 60 km/h, matching “smoothly reduce speed to below 60 km/h.”
+
+---
+
+### 4) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "vehicle_state": {"driving_state": "reverse"}
+    },
+    "action": {"Whether_allow_reverse": false}
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "vehicle_state": {"driving_state": "reverse"}
+    },
+    "action": {"Whether_allow_reverse": false}
+  }'
+)
+
+### Modifications and Reasons:
+- No change needed.  
+- This enforces “do not reverse” on the highway when the vehicle attempts to go into reverse.
+
+---
+
+### 5) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "vehicle_state": {"driving_state": "u_turn"}
+    },
+    "action": {"Whether_allow_u_turn": false}
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "vehicle_state": {"driving_state": "u_turn"}
+    },
+    "action": {"Whether_allow_u_turn": false}
+  }'
+)
+
+### Modifications and Reasons:
+- No change needed.  
+- This rule correctly prohibits U-turns on the highway, consistent with “do not… make a U-turn.”
+
+---
+
+### 6) Original Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "condition": {
+      "vehicle_state": {"driving_state": "pull_over"}
+    },
+    "action": {"Whether_allow_parking": false}
+  }'
+)
+
+### Revised Function Call:
+Function(
+  name="UDrive",
+  arguments='{
+    "trigger": {"in": "highway"},
+    "action": {"Whether_allow_parking": false}
+  }'
+)
+
+### Modifications and Reasons:
+- Removed the unnecessary `condition` on `driving_state: pull_over`. We want to disallow any parking or pulling over on the highway at all times.  
+- Consolidated into a trigger-only rule: whenever on the highway, `Whether_allow_parking=false` enforces “do not… stop to ask for directions.”
+17: Driving in Rainy Weather: 1. Stay Calm During Sudden Heavy Rain: When a sudden rainstorm or heavy rain hits, the wind howls, dust swirls, and the sky darkens. Non-motorized vehicle drivers and pedestrians may panic, running in all directions to avoid the rain, creating a chaotic mix of people and vehicles. In such a confusing traffic environment, drivers should remain calm and composed, operating their vehicles methodically and demonstrating their ability to manage attention. Before the rain, the road surface may be covered with dust. When it starts raining, this dust absorbs water, creating a slippery 'lubricant' on the road. At this time, it's crucial to reduce speed and drive cautiously to avoid wheel slippage or veering off course when reacting to sudden dangers by braking or steering sharply. 2. Lightning Safety During Thunderstorms: If the rain becomes too heavy to drive safely, do not hastily get out of the car to seek shelter; staying inside the vehicle is safer. If lightning strikes the car, the electrical current will travel through the car's exterior to the ground, generally keeping the occupants safe from harm. When sheltering from the rain in your car, be mindful of where you park. Avoid parking on isolated high ground, under trees, beneath power lines, near transformers, or in areas with standing water. During thunderstorms, do not use your phone to make calls; it's best to turn it off to avoid attracting lightning. 3. Using Car Lights in Rainy Weather: On rainy days, high humidity and temperature differences between the inside and outside of the vehicle can cause fog to form on the inside of the windshield, obstructing visibility. Rainwater on the windshield can also impair the driver's view. To improve visibility, you can turn on the air conditioner or heater blower to clear the fog from the inside of the windshield. Use the windshield wipers to remove rainwater from the outside. In the dim light of rainy weather, it's advisable to turn on the front and rear position lights to alert other vehicles and pedestrians. If necessary, you can also turn on the hazard warning lights to enhance visibility. When driving in low visibility conditions on a dark, rainy day, using the low beam headlights can help you see the road more clearly. Braking and Steering in Rainy Weather: In rainy conditions, visibility is poor, the road surface is slippery, and some sections may have standing water, reducing the car's braking performance. Therefore, you should reduce speed and select an appropriate gear when driving in the rain, avoiding the use of emergency braking whenever possible. On slippery roads, especially on muddy surfaces, steering should be gentle. Turn the steering wheel early, slowly, and smoothly, avoiding sudden or sharp turns to prevent the vehicle from skidding.
+Here is a call-by-call review of your four UDrive rules for “Driving in Rainy Weather.”  For each, I check whether the structure, parameters and semantics line up with the natural-language guidance and point out any fixes.
+
+1)  
+### Original Function Call:  
+Function(  
+  arguments='{"trigger": {"always": true},  
+             "condition": {"weather_is": "raining"},  
+             "action": {  
+              "Expected_speed": {"speed_number": 30},  
+              "Whether_declearation": true,  
+              "Static_Obstacle_Deceleration_ratio": 0.5,  
+              "State_action": {"target": "position_light", "whether_turn_on": true}  
+              }  
+        }',  
+  name='UDrive'  
+)  
+
+### Issue & Revision  
+– The scenario describes general cautious driving in the rain (slippery surface), not a static-obstacle encounter.  The “Static_Obstacle_Deceleration_ratio” only applies when slowing for a *static* obstacle.  If we want a deceleration ratio at all, it should be the *dynamic* one (e.g. for moving hazards like pedestrians) or dropped altogether.  
+– It’s perfectly fine to keep “Expected_speed” and turn on the position lights here.  
+
+### Revised Function Call:  
+Function(  
+  arguments='{"trigger":{"always":true},  
+             "condition":{"weather_is":"raining"},  
+             "action":{  
+               "Expected_speed":{"speed_number":30},  
+               "Whether_declearation":true,  
+               "Dynamic_Obstacle_Deceleration_ratio":0.5,  
+               "State_action":{"target":"position_light","whether_turn_on":true}  
+             }}'  
+  name='UDrive'  
+)  
+
+### Modifications and Reasons:  
+- Dropped **Static_Obstacle_Deceleration_ratio**; it does not match the free-driving, slippery-road context.  
+- Swapped in **Dynamic_Obstacle_Deceleration_ratio** (0.5) so that if a pedestrian or other moving hazard appears, the vehicle will slow by 50%.  
+
+2)  
+### Original Function Call:  
+Function(  
+  arguments='{"trigger":{"always":true},  
+             "condition":{"weather_is":"raining"},  
+             "action":{"State_action":{"target":"low_beam","whether_turn_on":true}}}'  
+  name='UDrive'  
+)  
+
+### Analysis  
+This correctly captures “in low-visibility rainy conditions, turn on the low-beam headlights.”  It is syntactically and semantically valid—no change needed.  
+
+3)  
+### Original Function Call:  
+Function(  
+  arguments='{"trigger":{"always":true},  
+             "condition":{"weather_is":"raining"},  
+             "action":{"State_action":{"target":"hazard_warning_light","whether_turn_on":true}}}'  
+  name='UDrive'  
+)  
+
+### Analysis  
+Also valid: the guidance says “if necessary, turn on hazard warning lights to enhance visibility.”  No edits required.  
+
+4)  
+### Original Function Call:  
+Function(  
+  arguments='{"trigger":{"always":true},  
+             "condition":{"weather_is":"raining"},  
+             "action":{  
+                "Whether_declearation":true,  
+                "Dynamic_Obstacle_Deceleration_ratio":0.5  
+             }}'  
+  name='UDrive'  
+)  
+
+### Analysis  
+This duplicates the deceleration logic already handled in (1).  If you intend a separate rule that only applies “when you meet a moving obstacle in the rain, slow down,” it’s valid.  Otherwise you can merge it into the first rule.  
+
+Summary:  
+– Rule 1 needed to swap the static-ratio for the dynamic one.  
+– Rules 2 and 3 are good as-is.  
+– Rule 4 is redundant if you’ve already put dynamic-deceleration in rule 1; otherwise it’s fine.
+18: Defensive Driving in Waterlogged Conditions: When driving through water, the buoyancy and lubricating effect of water reduce the tires' traction with the ground, decreasing the vehicle's stability and increasing the likelihood of wheel spin and skidding. The water also increases the vehicle's rolling resistance. Additionally, the water waves generated by the moving vehicle can cause electrical equipment to short-circuit or fail, and they can distort the driver's perception of the road. It's also difficult to assess the condition of the road surface beneath the water. 1. Pay Attention to the Depth of Water: During the rainy season, especially in heavy rain, low-lying areas, underpasses, and tunnels often accumulate water. When encountering large, deep areas of water, do not attempt to cross hastily. First, observe if other vehicles can pass through safely, and second, consider taking an alternate route. 2. Prevent Engine Stalling: When driving through water, it is essential to keep the engine speed slightly higher to avoid stalling while maintaining a low vehicle speed to minimize water disturbance. If the engine stalls in deep water, it can be a serious issue. In such cases, attempting to restart the engine is unlikely to succeed and could cause further damage; the best course of action is to seek assistance. 3. Do Not Follow Too Closely: When driving through water, avoid following the vehicle in front too closely. Also, increase the lateral distance from oncoming vehicles to prevent water waves from causing issues like high-voltage line leakage, which could lead to engine stalling.
+### 1) Rule for reducing speed and turning on hazard lights in flooded conditions
+
+Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "action": {
+      "Expected_speed": {"speed_number": 10},
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.5,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.5,
+      "Dynamic_Obstacle_Follow_distance": 10,
+      "Lateral_buffer_distance": 2
+    }
+  }',
+  name='UDrive'
+)
+
+Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "condition": {"weather_is": "raining"},
+    "action": {
+      "Expected_speed": {"speed_number": 10},
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.5,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.5,
+      "Dynamic_Obstacle_Follow_distance": 10,
+      "Lateral_buffer_distance": 2,
+      "State_action": {"target": "hazard_warning_light", "whether_turn_on": true}
+    }
+  }',
+  name='UDrive'
+)
+
+Modifications and Reasons:
+- Added condition `"weather_is": "raining"` to ensure this rule only applies when waterlogging is likely.
+- Turned on hazard lights (`State_action`) to warn other road users in flooded conditions.
+- Kept the original deceleration and buffer‐distance settings to maintain low speed and safe spacing.
+
+
+### 2) Rule for increasing follow distance when a vehicle is too close in front
+
+Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.7,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.7,
+      "Dynamic_Obstacle_Follow_distance": 15
+    }
+  }',
+  name='UDrive'
+)
+
+Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "condition": {
+      "weather_is": "raining",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.7,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.7,
+      "Dynamic_Obstacle_Follow_distance": 15,
+      "Lateral_buffer_distance": 3
+    }
+  }',
+  name='UDrive'
+)
+
+Modifications and Reasons:
+- Added `"weather_is": "raining"` to tie the rule to actual flooding conditions.
+- Increased lateral buffer (`Lateral_buffer_distance`: 3 m) to avoid side‐splash from oncoming vehicles.
+- Retained stronger deceleration ratios and longer follow distance to prevent wheel spin in deep water.
+
+
+### 3) Rule permitting lane borrowing in flooded conditions
+
+Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "action": {
+      "Whether_allow_borrow_left_lane": true,
+      "Whether_allow_borrow_right_lane": true,
+      "Lateral_buffer_distance": 2
+    }
+  }',
+  name='UDrive'
+)
+
+Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "condition": {"weather_is": "raining"},
+    "action": {
+      "Whether_allow_borrow_left_lane": false,
+      "Whether_allow_borrow_right_lane": false,
+      "Lateral_buffer_distance": 2
+    }
+  }',
+  name='UDrive'
+)
+
+Modifications and Reasons:
+- In heavy flooding, borrowing adjacent lanes increases risk (unexpected depth, unknown traffic). Set both borrow permissions to **false**.
+- Added `"weather_is": "raining"` so the prohibition applies only when road is actually waterlogged.
+
+
+### 4) Rule allowing reversing in flooded conditions
+
+Original Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "action": {"Whether_allow_reverse": true}
+  }',
+  name='UDrive'
+)
+
+Revised Function Call:
+Function(
+  arguments='{
+    "trigger": {"in": "flooded_road"},
+    "condition": {"weather_is": "raining"},
+    "action": {"Whether_allow_reverse": false}
+  }',
+  name='UDrive'
+)
+
+Modifications and Reasons:
+- Reversing in deep water carries high risk of water ingestion and stalling. Set `"Whether_allow_reverse": false`.
+- Tied the rule to raining/flooded conditions with `"weather_is": "raining"`.
+19: Defensive Driving in Snowy Conditions: In foggy conditions, outdoor visibility is low, and condensation on the windows further reduces visibility from inside the vehicle. During winter fog, the ground may be wet or icy, affecting the vehicle's braking performance. Fog often covers large areas and can persist for extended periods. 1. Keep the Windshield Clean: When driving in foggy conditions, ensure that the windshield and windows are clean. Dust on the glass can easily attract condensation, making visibility even worse. In dense fog, you can use the wipers intermittently to remove small water droplets that accumulate on the windshield. 2. Adjust Speed: When driving in fog, adjust your speed according to visibility. If visibility is within 30 meters, your speed should not exceed 20 km/h. If visibility drops to 5 meters or less, it's best to find a safe place to stop and wait until the fog clears or lightens before continuing your journey. 3. Stay on Course: In foggy weather, poor visibility can cause many drivers to deviate from their intended route. Some drivers may veer to the right side of the road to avoid collisions with oncoming vehicles, while others may drift to the left to avoid hitting bicycles traveling in the same direction. These practices increase the risk of accidents in foggy conditions and should be avoided. It's important to maintain a steady course and stay centered in your lane. 4. Use Lights Correctly: In foggy weather, you can turn on your hazard warning lights to alert other vehicles and pedestrians, applying the defensive driving principle of making yourself noticeable. It’s not advisable to use high-beam headlights in fog because their upward-angled beams will scatter off the fog, creating a white glare that makes it harder to see the road. Instead, use fog lights, which emit yellow light that penetrates fog more effectively, providing better visibility. Once the fog clears, be sure to turn off the fog lights. When driving at night in normal weather conditions, avoid using fog lights to prevent dazzling oncoming drivers. 5. Adjust Speed in Patchy Fog: Sometimes fog is unevenly distributed, appearing like floating clouds on the ground, known as patchy fog. In such conditions, vehicles may travel at higher speeds in clear areas, but as they enter foggy patches, visibility can suddenly drop. Some drivers might react by braking abruptly, which can lead to rear-end collisions. When driving in patchy fog, be alert to changes in visibility on the road ahead and adjust your speed accordingly. If visibility decreases or the fog thickens ahead, reduce your speed in advance. When following another vehicle in foggy conditions, keep an eye on the brake lights of the car in front. If the brake lights illuminate, be ready to respond quickly and prepare to brake as needed.
+### 1. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}}}', name='UDrive')
+
+### 1. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}}}', name='UDrive')
+
+### 1. Modifications and Reasons:
+- No change.  
+- Turning on fog lights in foggy weather matches rule 4 (use fog lights, not high beams).
+
+---
+
+### 2. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy", "distance_to": {"road_type": "all", "CompOp": "<=", "distance_num": 30}}, "action": {"Expected_speed": {"speed_number": 20}}}', name='UDrive')
+
+### 2. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Expected_speed": {"speed_number": 20}}}', name='UDrive')
+
+### 2. Modifications and Reasons:
+- Removed `"distance_to": {"road_type": "all", ...}` because:
+  - `road_type` must be one of the specified enums (no `"all"` value).
+  - The DSL has no built-in "visibility" parameter; misuse of `distance_to` to represent visibility is semantically invalid.
+- Kept a flat fog-speed rule: when it is foggy, target speed = 20 km/h.  
+- If true visibility sensing is required, the DSL must be extended with a `visibility` condition.
+
+---
+
+### 3. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy", "distance_to": {"road_type": "all", "CompOp": "<=", "distance_num": 5}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+### 3. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+### 3. Modifications and Reasons:
+- Removed invalid `distance_to` clause for the same reasons as above.
+- Stopping whenever fog is present is a weaker approximation of “if visibility ≤ 5 m, then stop.”
+- To capture the 5 m threshold, the DSL would need a new `visibility` condition.
+
+---
+
+### 4. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}', name='UDrive')
+
+### 4. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}', name='UDrive')
+
+### 4. Modifications and Reasons:
+- No change.  
+- Turning off high beams in foggy weather matches rule 4 (avoid high-beam glare).
+
+---
+
+### 5. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "hazard_warning_light", "whether_turn_on": true}}}', name='UDrive')
+
+### 5. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": {"target": "hazard_warning_light", "whether_turn_on": true}}}', name='UDrive')
+
+### 5. Modifications and Reasons:
+- No change.  
+- Activating hazard lights in foggy weather is a valid defensive-driving measure (rule 4).
+
+---
+
+### 6. Original Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Whether_priority_change_lane": false}}', name='UDrive')
+
+### 6. Revised Function Call:
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}', name='UDrive')
+
+### 6. Modifications and Reasons:
+- Replaced `"Whether_priority_change_lane": false` with explicit lane-change permissions:
+  - `"Whether_allow_left_lane_change": false`
+  - `"Whether_allow_right_lane_change": false`
+- This enforces “stay centered in your lane” (rule 3) more precisely.  
+- `Whether_priority_change_lane` is only a guideline to prefer lane changes, not a hard prohibition. The revised flags strictly disallow drifting.
+20: Defensive Driving in Strong Winds and Dusty Conditions: 1. Dust Prevention in Dust Storms: When driving in dusty conditions, keep the cabin sealed by tightly closing the car windows and setting the air circulation system to the recirculation mode. This prevents dust from entering the cabin, as shown in Figure 4-16. Simply closing the windows is not enough; if the air circulation is set to the external mode, dust from outside can enter the cabin through the air conditioning system. Additionally, do not use the windshield wipers to remove dust from the windshield while driving. Doing so not only fails to clear the dust effectively but also causes scratches on the glass due to friction, increasing wear on the wiper blades. The dry friction caused by this can also damage the wiper motor. 2. Impact of Strong Winds on Driving Safety: Wind direction and strength can significantly affect a vehicle's stability, especially when driving on highways, ring roads, or elevated roads where there is little to no wind protection from buildings. In strong winds, if the wind is blowing in the same direction as the vehicle, the braking distance will be longer, so it's important to start braking earlier. If the wind is blowing against the direction of travel, it can reduce the vehicle's acceleration, making overtaking more difficult and prolonged. When overtaking or passing obstacles, these factors should be considered to allow for a safety margin. Lateral wind can cause the vehicle to drift off course, and when taking sharp turns at high speeds in strong winds, if the wind direction aligns with the centrifugal force generated by the turn, the vehicle is more prone to skidding or even overturning. The faster the speed, the greater the centrifugal force, and the smaller the turning radius, the greater the risk. Therefore, in strong wind conditions, it's crucial to drive at a moderate speed and avoid sharp steering. 3. Parking Techniques to Avoid Strong Winds: If you encounter a violent storm while driving and continuing is difficult, for safety, you should find a sheltered spot to park your vehicle. When choosing a location to park, avoid areas near tall billboards, power transformers, or other potentially dangerous structures. In mountainous or hilly areas, you can use the natural terrain as a windbreak. If it is difficult to find a sheltered spot, park the car with the rear facing the wind and the front sheltered. This position reduces the impact of sand and stones on the vehicle and helps prevent the car from being overturned by the storm. Parking with the sides of the vehicle facing the wind is less stable and increases the risk of the vehicle being blown over.
+### Original Function Call:
+Function(
+  arguments='{"trigger": {"always": true}, "condition": {"weather_is": "sandstorm"}, "action": {"Whether_priority_change_lane": false}}',
+  name='UDrive'
+)

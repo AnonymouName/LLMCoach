@@ -1,0 +1,222 @@
+Law40_1: Directional signal lights indicate: When the green arrow light is on, allow vehicles in the lane to pass in the direction indicated;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+
+Law40_2: Directional signal lights indicate: When the red arrow traffic light is illuminated, vehicles in the corresponding direction must stop and are prohibited from proceeding.
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law41: The arrow directions of the directional signal light indicate the intended movement: a left-pointing arrow signifies a left turn, an upward-pointing arrow signifies going straight, and a right-pointing arrow signifies a right turn.
+Function(arguments='{"trigger": {"always": true}, "condition": {}, "action": {}}', name='UDrive')
+
+Law42: The flashing warning signal light is a yellow light that continues to flash, reminding vehicles and pedestrians to pay attention when passing through, and pass after confirming safety.
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "yellow", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Expected_speed": {"speed_number": 20, "limit_speed": false}}}', name='UDrive')
+
+Law43: At a railway crossing where the roadway intersects with railway tracks, a flashing or steady red traffic light indicates that vehicles and pedestrians are prohibited from crossing. When the red light is off, it signifies that vehicles and pedestrians are allowed to proceed.
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": false, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+
+Law44_1: Where there are two or more motor vehicle lanes in the same direction on a urban road, the leftmost lane shall be designated as the fast lane, and the rightmost lane as the slow lane. Motor vehicles traveling in the fast lane must maintain the speed specified for that lane. Vehicles traveling at speeds substantially below the designated speed for the fast lane shall move to the slow lane.
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": "<", "speed_num": 40}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 60}}}, "action": {"Expected_speed": {"speed_number": 60, "limit_speed": true}}}', name='UDrive')
+
+Law44_2: Where there are two or more motorized lanes in the same direction on the urban road, the left side is the fast lane and the right side is the slow lane. Motorcycles should drive in the rightmost lane.
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": true}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "slow_lane"}, "action": {"Whether_allow_left_lane_change": true, "Whether_allow_right_lane_change": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"vehicle_state": {"driving_state": "go_straight"}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}', name='UDrive')
+
+Law44_3: If there are traffic signs indicating the driving speed, drive at the indicated driving speed.
+Function(arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}}', name='UDrive')
+
+Law44_4: Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. When a motor vehicle in a slow lane overtakes the preceding vehicle, it can borrow the fast lane to drive.
+Function(arguments='{"trigger": {"always": true}, "condition": {"is_special_lane": "slow_lane", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_allow_borrow_left_lane": true}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')
+
+Law44_5: When there are two or more lanes for motor vehicles traveling in the same direction, a motor vehicle shall change lanes only when it does not impede the normal movement of vehicles already traveling in the target lane.
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "left", "distance": {"CompOp": ">", "distance_num": 20}}}, "action": {"Whether_allow_left_lane_change": true}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": ">", "distance_num": 20}}}, "action": {"Whether_allow_right_lane_change": true}}', name='UDrive')
+
+Law45_1: Motor vehicles must not exceed the speed indicated by the speed limit signs and markings on the road.
+Function(arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}}', name='UDrive')
+
+Law45_2: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads without a road centerline, urban roads are 30 kilometers per hour, and highways are 40 kilometers per hour;
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "highway"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 40}}}', name='UDrive')
+
+Law45_3: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads with only one motor vehicle lane in the same direction, 50 kilometers per hour for urban roads and 70 kilometers per hour for highways.
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 50, "limit_speed": false}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "motorway"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 70, "limit_speed": false}}}', name='UDrive')
+
+Law46_1: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When entering or leaving a non-motorized vehicle lane, passing through a railway crossing, a sharp curve, a narrow road, or a narrow bridge;
+Function(arguments='{"trigger": {"in": "non-motorized"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "sharp_curve"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "narrow_road"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "narrow_bridge"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+
+Law46_2: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When making a U-turn, turning, or going downhill;
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+
+Law46_3: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: In case of fog, rain, snow, sand dust, hail, the visibility is within 50 meters;
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "sandstorm"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "hail"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+
+Law46_4: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When driving on icy and muddy roads;
+Function(arguments='{"trigger":{"in":"icy_road"},"action":{"Expected_speed":{"speed_number":30}}}', name='UDrive')
+Function(arguments='{"trigger":{"in":"muddy_road"},"action":{"Expected_speed":{"speed_number":30}}}', name='UDrive')
+
+Law46_5: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When towing a malfunctioning motor vehicle.
+Function(arguments='{"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":30}}}', name='UDrive')
+Function(arguments='{"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":15}}}', name='UDrive')
+
+Law47_1: When a motor vehicle is overtaking, it shall turn on the left turn signal in advance, change the use of far and low beam lights, or honk the horn.
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+
+Law47_2: On a road with no center line of the road or with only one motor vehicle lane in the same direction, when the vehicle in front meets the vehicle behind and sends an overtaking signal, if conditions permit, the speed should be reduced and the road should be made to the right. After confirming that there is a sufficient safety distance, the following vehicle should pass from the left side of the vehicle in front, and after pulling the necessary safety distance from the overtaken vehicle, turn on the right turn signal and drive back to the original lane.
+Function(arguments='{"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.3, "Change_lane_action": {"direction": "left", "times": 1}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Law48_1: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: Slow down and keep to the right, and keep a necessary safe distance from other vehicles and pedestrians;
+Function(arguments='{"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite"}, "vehicle_state": {"speed": {"CompOp": ">", "speed_num": 0}}}, "action": {"Expected_speed": {"speed_number": 30}, "Lateral_buffer_distance": 1}}', name='UDrive')
+
+Law48_2: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: When an obstacle is present on the road, the vehicle on the side without the obstacle shall have the right of way. However, if the vehicle on the side with the obstacle has already entered the obstructed section while the vehicle on the unobstructed side has not, the vehicle on the side with the obstacle shall have the right of way.
+Function(arguments='{"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}, "direction": "opposite"}}, "action": {"Whether_allow_borrow_left_lane": true}}', name='UDrive')
+
+Law48_3: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On a narrow slope, the uphill side goes first; but when the downhill side has reached halfway and the uphill side is not uphill, the downhill side goes first;
+Function(arguments='{"trigger": {"in": "narrow_road"}, "condition": {"is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 20}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 15}}}', name='UDrive')
+
+Law48_4: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On the narrow mountain road, the side that does not rely on the mountain shall go first;
+Function(arguments='{"trigger": {"in": "mountain_road"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Whether_priority_change_lane": true}}', name='UDrive')
+
+Law48_5: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: During nighttime driving, low beam headlights shall be used when approaching an oncoming vehicle from a distance greater than 150 meters. Low beams shall also be used when encountering non-motorized vehicles on narrow roads or narrow bridges at night.
+Function(arguments='{"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "narrow_bridge"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}', name='UDrive')
+
+Law49_1: Motor vehicles shall not make a U-turn at locations where U-turns or left turns are prohibited by signs or markings, or at railway crossings, pedestrian crossings, bridges, sharp curves, steep slopes, tunnels, or other road sections where danger is likely to occur.
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "railway_crossing"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "crosswalk"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "bridge"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "sharp_curve"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "steep_slope"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "tunnel"}, "action": {"Whether_allow_u_turn": false}}', name='UDrive')
+
+Law49_2: Motor vehicles can make U-turns where there is no prohibition of turning or left-turning signs or markings, but it shall not hinder the passage of other vehicles and pedestrians in normal driving.
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "no_u-turn_signal", "CompOp": ">", "distance_num": 20}, "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": ">", "distance_num": 10}}}, "action": {"Whether_allow_u_turn": true}}', name='UDrive')
+
+Law50: When a motor vehicleis reversing, the situation behind the vehicle shall be ascertained and the vehicle shall be reversed after confirming that it is safe. Do not reverse in railway crossings, intersections, one-way roads, bridges, sharp bends, steep slopes, or tunnels.
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "reverse"}}, "action": {"Whether_allow_reverse": true}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "bridge"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "sharp_bend"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "tunnel"}, "condition": {}, "action": {"Whether_allow_reverse": false}}', name='UDrive')
+
+Law51_1: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Change_lane_action": {"direction": "left", "times": 1}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}', name='UDrive')
+
+Law51_2: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Those who are preparing to enter the roundabout let motor vehicles already in the intersection go ahead;
+Function(arguments='{"trigger": {"in": "roundabout"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_priority_change_lane": false, "Whether_allow_borrow_lane": false, "Whether_allow_u_turn": false, "Whether_allow_reverse": false, "Mano_action": "wait"}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "roundabout"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law51_3: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Turn on the turn signal when turning, and turn on the low beam when driving at night;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "time_is": "night"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}, "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}, "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Law51_4: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Pass in turn when encountering a release signal;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+
+Law51_5: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When the stop signal is encountered, stop outside the stop line in turn. If there is no stop line, stop outside the intersection;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "stop_signal", "distance": 5}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}, "not_in": "intersection"}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "stop_signal", "distance": 5}}}', name='UDrive')
+
+Law51_6: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When turning right when there is a car in the same lane waiting for the release signal, stop and wait in turn;
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right", "speed": {"CompOp": "<", "speed_num": 1}}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+
+Law51_7: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At intersections with no direction indicator lights, turning motor vehicles let straight vehicles and pedestrians go first. Right-turning motor vehicles traveling in the opposite direction let left-turning vehicles go first.
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_go_straight"}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "launch"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite"}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law52_1: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: If there are traffic signs or road markings, the vehicle must yield to the party with the right of way.
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law52_2: When a motor vehicle passes through an intersection that is neither controlled by traffic lights nor directed by traffic police, it must comply with the following provisions: If there are no traffic signs or road markings to control the intersection, the vehicle must stop and look before entering, and yield the right of way to traffic coming from the right.
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "intersection", "time": 3}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "wait"}}', name='UDrive')
+
+Law52_3: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: Vehicles making turns must yield to vehicles going straight.
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law52_4: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it shall also comply with the following provision: A right-turning motor vehicle traveling in the opposite direction must yield to a left-turning vehicle.
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 20}}}', name='UDrive')
+
+Law53_1:  When a motor vehicle encounters traffic congestion at an intersection ahead, it shall stop and wait in order outside the intersection and must not enter the intersection.
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"is_jam": true}, "action": {"Mano_action": "stop"}}', name='UDrive')
+
+Law53_2: When a motor vehicle encounters a motor vehicle in front of the vehicle parked in a queue or is driving slowly, it shall be queued in sequence, and shall not pass through or overtake from both sides of the vehicle in front and shall not park and wait in the area of crosswalks or no parking zone.
+Function(arguments='{"trigger": {"always": true}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "crosswalk"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "no_parking_zone"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}', name='UDrive')
+
+Law53_3: When a motor vehicle is at an intersection or road section with reduced lanes, if there is a motor vehicle in front of the vehicle parked in a queue or driving slowly, one vehicle in each lane shall alternately drive into the intersection or road section with reduced lanes.
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}', name='UDrive')
+
+Law57_1: Motor vehicles shall use turn signals in accordance with the following provisions: When turning left, changing lanes to the left, preparing to overtake, leaving a parking place or turning around, the left turn signal shall be turned on in advance;
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Law57_2: Motor vehicles shall use turn signals in accordance with the following provisions: When turning right, changing lanes to the right, driving back to the original lane after overtaking, or stopping by the side of the road, the right turn signal should be turned on in advance.
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Law58: When a motor vehicle is driving at night in areas without streetlights, under poor lighting conditions, or in fog, rain, snow, sand, hail, or other low visibility situations, the headlights, position lights, and rear position lights should be turned on. However, when driving close to a vehicle ahead or behind in the same direction, high beams must not be used. On foggy days, fog lights and hazard warning flashers should be activated.
+Function(arguments='{"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}, "State_action": {"target": "hazard_warning_light", "whether_turn_on": true}, "State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}', name='UDrive')
+
+Law59_1: When a vehicle passes sharp bends, slopes, arch bridges, crosswalks or intersections at night, it shall alternately use far and near lights.
+Function(arguments='{"trigger": {"in": "sha1rp_curve"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "bridge"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+
+Law59_2: When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn.
+Function(arguments='{"trigger": {"in": "sharp_bend"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}', name='UDrive')
+
+Law62_2: Driving a motor vehicle shall not have the following behaviors: Honk horns in areas or road sections where honking is prohibited.
+Function(arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"no_honking_signal","CompOp":"<","distance_num":50}},"action":{"State_action":{"target":"horn","whether_turn_on":false}}}', name='UDrive')
+
+Law64: When a motor vehicle is passing a flooded Road or flooded Bridge, it shall stop and check the water conditions, and after confirming safety, pass at low speed.
+Function(arguments='{"trigger":{"in":"flooded_road"},"condition":{},"action":{"Mano_action":"stop","Creep_time":{"reason":"flooded_road","time":5},"Expected_speed":{"speed_number":20}}}', name='UDrive')
+Function(arguments='{"trigger":{"in":"flooded_bridge"},"condition":{},"action":{"Mano_action":"stop","Creep_time":{"reason":"flooded_bridge","time":5},"Expected_speed":{"speed_number":20}}}', name='UDrive')
+

@@ -1,0 +1,991 @@
+{
+  "name": "UDrive",
+  "arguments": {
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "find_traffic_light": {
+        "color": "yellow",
+        "flash": true,
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+}
+
+{
+  "trigger": { "in": "railway_crossing" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "CompOp": "<=",
+      "distance_num": 10
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Stopping_distance": {
+      "reason": "traffic_light",
+      "distance": 2
+    }
+  }
+}
+{
+  "trigger": { "in": "railway_crossing" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "black",
+      "CompOp": "<=",
+      "distance_num": 10
+    }
+  },
+  "action": {
+    "Mano_action": "launch",
+    "Expected_speed": {
+      "speed_number": 10
+    }
+  }
+}
+
+{
+     "trigger": { "in": "urban_lane" },
+     "condition": {
+       "is_special_lane": "fast_lane",
+       "vehicle_state": {
+         "speed": { "CompOp": "<", "speed_num": 50 }
+       }
+     },
+     "action": {
+       "Change_lane_action": { "direction": "right", "times": 1 }
+     }
+   }
+}
+{
+     "trigger": { "in": "urban_lane" },
+     "condition": {
+       "not_special_lane": "fast_lane"
+     },
+     "action": {
+       "Expected_speed": { "speed_number": 30 }
+     }
+   }
+}
+
+Function(arguments='{"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<=","distance_num":100}},"action":{"Expected_speed":{"limit_speed":true}}}',
+  name='UDrive'
+)
+
+{
+  "trigger": {
+    "in": "urban_lane"
+  },
+  "condition": {
+    "not_special_lane": "fast_lane",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "same",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 10
+      }
+    }
+  },
+  "action": {
+    "Whether_allow_borrow_left_lane": true
+  }
+}
+
+Function(arguments='{"trigger":{"always":true},"action":{"Whether_priority_change_lane":false}}', name='UDrive')
+
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "motorway"},   "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 40}}}', name='UDrive')
+
+Function(arguments='{"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction", "vehicle_state": {"speed": {"CompOp": ">", "speed_num": 50}}}, "action": {"Expected_speed": {"speed_number": 50}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "motorway"}, "condition": {"is_special_lane": "one_lane_same_direction", "vehicle_state": {"speed": {"CompOp": ">", "speed_num": 70}}}, "action": {"Expected_speed": {"speed_number": 70}}}', name='UDrive')
+
+Function(arguments='{"trigger": {"in": "non-motorized"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "railway_crossing"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "sharp_curve"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "narrow_road"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+Function(arguments='{"trigger": {"in": "narrow_bridge"}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')  
+
+UDrive({
+  "trigger":   {"always": True},
+  "condition": {
+    "vehicle_state": {"driving_state": "u_turn"}
+  },
+  "action":    {
+    "Expected_speed": {"speed_number": 30}
+  }
+})
+UDrive({
+  "trigger":   {"always": True},
+  "condition": {
+    "vehicle_state": {"driving_state": "turn_left"}
+  },
+  "action":    {
+    "Expected_speed": {"speed_number": 30}
+  }
+})
+UDrive({
+  "trigger":   {"always": True},
+  "condition": {
+    "vehicle_state": {"driving_state": "turn_right"}
+  },
+  "action":    {
+    "Expected_speed": {"speed_number": 30}
+  }
+})
+UDrive({
+  "trigger":   {"in": "steep_slope"},
+  "condition": {},
+  "action":    {
+    "Expected_speed": {"speed_number": 30}
+  }
+})
+
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "foggy", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "raining", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "snowing", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "sandstorm", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"weather_is": "hail", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}', name='UDrive')
+
+Function(
+  arguments='{"trigger":{"always":true},\
+               "condition":{"vehicle_state":{"driving_state":"towing"}},\
+               "action":{"Expected_speed":{"speed_number":30}}}',
+  name='UDrive'
+)
+
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {"always": True},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "left_turn_light",
+        "whether_turn_on": True
+      }
+    }
+  }
+)
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {"always": True},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "alternated_between_high_and_low_beams",
+        "whether_turn_on": True
+      }
+    }
+  }
+)
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {"always": True},
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {
+      "State_action": {
+        "target": "horn",
+        "whether_turn_on": True
+      }
+    }
+  }
+)
+
+{"trigger": {"always": true},
+ "condition": {
+   "is_special_lane": "one_lane_same_direction",
+   "find_obstacle": {
+     "obstacle_type": "vehicle",
+     "position": "front",
+     "distance": {"CompOp": "<=", "distance_num": 20}
+   }
+ },
+ "action": {
+   "Whether_declearation": true,
+   "Static_Obstacle_Deceleration_ratio": 0.5,
+   "Forward_buffer_distance": 5,
+   "Whether_priority_change_lane": true,
+   "Change_lane_action": {"direction": "left", "times": 1},
+   "Expected_speed": {"speed_number": 30}
+ }
+}
+
+Function(
+  arguments='{
+    "trigger": {"in": "narrow_road"},
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "direction": "opposite",
+        "distance": {"CompOp": "<=", "distance_num": 10}
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.5,
+      "Lateral_buffer_distance": 3
+    }
+  }',
+  name='UDrive'
+)
+
+Function(
+  arguments='{
+    "trigger": { "always": true },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "all",
+        "position": "left",
+        "distance": { "CompOp": "<", "distance_num": 5 }
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": { "always": true },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "left",
+        "direction": "opposite",
+        "distance": { "CompOp": "<", "distance_num": 50 }
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }',
+  name='UDrive'
+)
+
+UDrive(
+  {
+    "trigger": {
+      "in": "steep_slope"
+    },
+    "condition": {
+      "is_special_lane": "without_centerline",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {
+          "CompOp": "<",
+          "distance_num": 20
+        }
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+)
+{
+  "trigger": {
+    "in": "mountain_road"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 30
+      }
+    }
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+
+{
+  "trigger": {
+    "in": "mountain_road"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {
+        "CompOp": "<",
+        "distance_num": 30
+      }
+    }
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+
+Function(arguments='{"trigger":{"always":true},"condition":{"time_is":"night","is_special_lane":"without_centerline","find_obstacle":{"obstacle_type":"vehicle","position":"front","direction":"opposite","distance":{"CompOp":"<","distance_num":150}}},"action":{"State_action":{"target":"low_beam","whether_turn_on":true}}}', name='UDrive')
+Function(arguments='{"trigger":{"in":"narrow_road"},"condition":{"time_is":"night","find_obstacle":{"obstacle_type":"non-motorized","position":"front", distance": {"CompOp": "<", "distance_num": 150}}},"action":{"State_action":{"target":"low_beam","whether_turn_on":true}}}', name='UDrive')
+Function(arguments='{"trigger":{"in":"narrow_bridge"},"condition":{"time_is":"night","find_obstacle":{"obstacle_type":"non-motorized","position":"front","distance": {"CompOp": "<", "distance_num": 150}}},"action":{"State_action":{"target":"low_beam","whether_turn_on":true}}}', name='UDrive')
+
+
+{
+    "trigger": { "always": true },
+    "condition": {
+      "find_signal": {
+        "signal_type": "no_u-turn_signal",
+        "CompOp": "<=",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Whether_allow_u_turn": false
+    }
+  },
+  {
+    "trigger": { "in": "railway_crossing" },
+    "action": { "Whether_allow_u_turn": false }
+  },
+  {
+    "trigger": { "in": "crosswalk" },
+    "action": { "Whether_allow_u_turn": false }
+  },
+  {
+    "trigger": { "in": "bridge" },
+    "action": { "Whether_allow_u_turn": false }
+  },
+  {
+    "trigger": { "in": "sharp_curve" },
+    "action": { "Whether_allow_u_turn": false }
+  },
+  {
+    "trigger": { "in": "tunnel" },
+    "action": { "Whether_allow_u_turn": false }
+  },
+  {
+    "trigger": { "in": "steep_slope" },
+    "action": { "Whether_allow_u_turn": false }
+  }
+
+{  
+    "trigger": { "always": true },  
+    "condition": {  
+      "find_signal": {  
+        "signal_type": "no_left_turn_signal",  
+        "CompOp": "<",  
+        "distance_num": 10  
+      }  
+    },  
+    "action": { "Whether_allow_u_turn": false }  
+  }
+
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "railway_crossing" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "intersection" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "always": true },
+       "condition": {
+         "in": "urban_lane",
+         "is_special_lane": "one_lane_same_direction",
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "bridge" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "sharp_curve" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "steep_slope" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+Function(
+     name="UDrive",
+     arguments="""
+     {
+       "trigger": { "in": "tunnel" },
+       "condition": {
+         "vehicle_state": { "driving_state": "reverse" }
+       },
+       "action": {
+         "Whether_allow_reverse": false
+       }
+     }
+     """
+   )
+
+Function(
+  arguments='{"trigger":{"in":"intersection"},"action":{"Whether_check":{"check_type":"traffic_light","check_sign":true}}}',
+  name='UDrive'
+)
+{
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<=",
+      "distance_num": 20
+    },
+    "distance_to": {
+      "road_type": "roundabout",
+      "CompOp": "<=",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+
+{
+  "trigger": {
+    "in": "intersection"
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "CompOp": "<=",
+      "distance_num": 20
+    },
+    "distance_to": {
+      "road_type": "roundabout",
+      "CompOp": "<=",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "yield"
+  }
+}
+
+{'trigger': {'in': 'intersection'},  
+ 'condition': {'time_is': 'night'},  
+ 'action': {'State_action': {'target': 'low_beam', 'whether_turn_on': true}}}
+{'trigger': {'in': 'intersection'},  
+ 'condition': {'vehicle_state': {'driving_state': 'turn_right'}},  
+ 'action': {'State_action': {'target': 'right_turn_light', 'whether_turn_on': true}}}
+{'trigger': {'in': 'intersection'},  
+ 'condition': {'vehicle_state': {'driving_state': 'turn_left'}},  
+ 'action': {'State_action': {'target': 'left_turn_light', 'whether_turn_on': true}}}
+
+Function(
+  arguments='{
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {
+        "color": "green",
+        "CompOp": "<=",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "launch"
+    }
+  }',
+  name='UDrive'
+)
+
+  {
+    "name": "UDrive",
+    "arguments": {
+      "trigger": {
+        "in": "intersection"
+      },
+      "condition": {
+        "find_signal": {
+          "signal_type": "stop_signal",
+          "CompOp": "<",
+          "distance_num": 20
+        }
+      },
+      "action": {
+        "Mano_action": "stop",
+        "Stopping_distance": {
+          "reason": "stop_signal",
+          "distance": 5
+        }
+      }
+    }
+  }
+
+   Function(
+     arguments='''
+     {
+       "trigger": { "in": "intersection" },
+       "condition": {
+         "vehicle_state": {
+           "driving_state": "turn_right"
+         },
+         "find_traffic_light": {
+           "traffic_light_type": "right-turn_signal_light",
+           "color": "red",
+           "CompOp": "<=",
+           "distance_num": 20
+         },
+         "find_obstacle": {
+           "obstacle_type": "vehicle",
+           "position": "front",
+           "direction": "same",
+           "distance": {
+             "CompOp": "<=",
+             "distance_num": 10
+           }
+         }
+       },
+       "action": {
+         "Mano_action": "stop"
+       }
+     }
+     ''',
+     name='UDrive'
+   )
+   Function(
+     arguments='''
+     {
+       "trigger": { "in": "intersection" },
+       "condition": {
+         "vehicle_state": {
+           "driving_state": "turn_right",
+           "speed": {
+             "CompOp": "==",
+             "speed_num": 0
+           }
+         },
+         "find_traffic_light": {
+           "traffic_light_type": "right-turn_signal_light",
+           "color": "green",
+           "CompOp": "<=",
+           "distance_num": 20
+         },
+         "find_obstacle": {
+           "obstacle_type": "vehicle",
+           "position": "front",
+           "distance": {
+             "CompOp": ">",
+             "distance_num": 10
+           }
+         }
+       },
+       "action": {
+         "Mano_action": "launch"
+       }
+     }
+     ''',
+     name='UDrive'
+   )
+
+
+UDrive(
+  arguments={
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "find_signal": {
+        "signal_type": "yield_signal",
+        "CompOp": "<=",
+        "distance_num": 20
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+)
+
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"vehicle_state": {"driving_state": "turn_left_or_go_straight"}}, "action": {"Mano_action": "yield"}}', name='UDrive')
+
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "turn_right"
+      },
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 30
+        }
+      }
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+)
+
+Function(
+  name="UDrive",
+  arguments={
+    "trigger": {
+      "always": true
+    },
+    "condition": {
+      "distance_to": {
+        "road_type": "intersection",
+        "CompOp": "<=",
+        "distance_num": 20
+      },
+      "is_jam": true
+    },
+    "action": {
+      "Mano_action": "stop"
+    }
+  }
+)
+
+Function(
+  arguments='''
+    {
+      "trigger":  { "always": true },
+      "condition": {
+        "find_obstacle": {
+          "obstacle_type": "vehicle",
+          "position":     "front",
+          "distance":     { "CompOp": "<=", "distance_num": 10 },
+          "speed":        { "CompOp": "<=", "speed_num": 10 }
+        }
+      },
+      "action": {
+        "Whether_priority_change_lane":    false,
+        "Whether_allow_left_lane_change":  false,
+        "Whether_allow_right_lane_change": false,
+        "Dynamic_Obstacle_Follow_distance": 5
+      }
+    }
+  ''',
+  name='UDrive'
+)
+Function(
+  arguments='''
+    {
+      "trigger": { "in": "crosswalk" },
+      "action": {
+        "Mano_action": "stop",
+        "Wait_time": { "reason": "crosswalk", "time": 2 }
+      }
+    }
+  ''',
+  name='UDrive'
+)
+
+{
+    "trigger": {
+      "in": "intersection"
+    },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "same",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 5
+        },
+        "speed": {
+          "CompOp": "<=",
+          "speed_num": 5
+        }
+      },
+      "is_jam": true
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  },
+  {
+    "trigger": {
+      "in": "narrow_road"
+    },
+    "condition": {
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "same",
+        "distance": {
+          "CompOp": "<=",
+          "distance_num": 5
+        },
+        "speed": {
+          "CompOp": "<=",
+          "speed_num": 5
+        }
+      },
+      "is_jam": true
+    },
+    "action": {
+      "Mano_action": "yield"
+    }
+  }
+
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}', name='UDrive')
+
+Function(  
+  name="UDrive",  
+  arguments='{  
+    "trigger": {"always": true},  
+    "condition": {"vehicle_state": {"driving_state": "turn_right"}},  
+    "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}  
+  }'  
+)  
+Function(  
+  name="UDrive",  
+  arguments='{  
+    "trigger": {"always": true},  
+    "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}},  
+    "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}  
+  }'  
+)  
+Function(  
+  name="UDrive",  
+  arguments='{  
+    "trigger": {"always": true},  
+    "condition": {"vehicle_state": {"driving_state": "pull_over"}},  
+    "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}  
+  }'  
+)  
+
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {"time_is": "night", "weather_is": "foggy"},
+    "action": {
+      "State_action_list": [
+        {"target": "low_beam",           "whether_turn_on": true},
+        {"target": "position_light",     "whether_turn_on": true},
+        {"target": "fog_light",          "whether_turn_on": true},
+        {"target": "hazard_warning_light","whether_turn_on": true},
+        {"target": "high_beam",          "whether_turn_on": false}
+      ]
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {"time_is": "night", "weather_is": "raining"},
+    "action": {
+      "State_action_list": [
+        {"target": "low_beam",       "whether_turn_on": true},
+        {"target": "position_light", "whether_turn_on": true},
+        {"target": "high_beam",      "whether_turn_on": false}
+      ]
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {"time_is": "night", "weather_is": "snowing"},
+    "action": {
+      "State_action_list": [
+        {"target": "low_beam",       "whether_turn_on": true},
+        {"target": "position_light", "whether_turn_on": true},
+        {"target": "high_beam",      "whether_turn_on": false}
+      ]
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {"time_is": "night", "weather_is": "sandstorm"},
+    "action": {
+      "State_action_list": [
+        {"target": "low_beam",       "whether_turn_on": true},
+        {"target": "position_light", "whether_turn_on": true},
+        {"target": "high_beam",      "whether_turn_on": false}
+      ]
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {"time_is": "night", "weather_is": "hail"},
+    "action": {
+      "State_action_list": [
+        {"target": "low_beam",       "whether_turn_on": true},
+        {"target": "position_light", "whether_turn_on": true},
+        {"target": "high_beam",      "whether_turn_on": false}
+      ]
+    }
+  }',
+  name='UDrive'
+)
+Function(
+  arguments='{
+    "trigger": {"always": true},
+    "condition": {
+      "time_is": "night",
+      "find_obstacle": {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "same",
+        "distance": {"CompOp": "<", "distance_num": 30}
+      }
+    },
+    "action": {
+      "State_action": {"target": "high_beam", "whether_turn_on": false}
+    }
+  }',
+  name='UDrive'
+)
+
+Function(arguments='{"trigger": {"in": "sharp_bend"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "bridge"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+Function(arguments='{"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}', name='UDrive')
+
+Function(
+  arguments='''
+  {
+    "trigger": { "in": "sharp_curve" },
+    "action": {
+      "Whether_declearation": true,
+      "Static_Obstacle_Deceleration_ratio": 0.5,
+      "State_action": {
+        "target": "horn",
+        "whether_turn_on": true
+      }
+    }
+  }
+  ''',
+  name='UDrive'
+)
+Function(
+  arguments='''
+  {
+    "trigger": { "always": true },
+    "condition": {
+      "vehicle_state": {
+        "driving_state": "change_lane_to_left"
+      }
+    },
+    "action": {
+      "Whether_declearation": true,
+      "Dynamic_Obstacle_Deceleration_ratio": 0.3,
+      "State_action": {
+        "target": "horn",
+        "whether_turn_on": true
+      }
+    }
+  }
+  ''',
+  name='UDrive'
+)
+
+Function(arguments='{"trigger":{"in":"flooded_road"},"action":{"Expected_speed":{"speed_number":5}}}', name='UDrive')
+Function(arguments='{"trigger":{"in":"flooded_bridge"},"action":{"Expected_speed":{"speed_number":5}}}', name='UDrive')

@@ -1,0 +1,615 @@
+Function Call: {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.90  
+Justification: Launching unconditionally on any green left-turn signal within 20 m on any road ignores intersection context and turning intent, making it illogical and unsafe.
+
+Function Call: {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.90  
+Justification: Similar to the left-turn case, it ignores road context and intended maneuver, making it unreasonable and hazardous.
+
+Function Call: {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.90  
+Justification: Fails to restrict to intersections or ensure clearance, so launching purely on a green straight signal within 20 m is unsafe and illogical.
+
+Function Call: {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_left" }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: Restricts to intersections with a green left-turn arrow and confirms intended left turn before launching, aligning with normal driving logic.
+
+Function Call: {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_right" }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: Properly scoped to intersections with a green right-turn arrow and matching vehicle intent, making it logical and safe.
+
+Function Call: {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "go_straight" }
+  },
+  "action": { "Mano_action": "launch" }
+}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: Correctly confines the rule to intersections with a green straight signal and ensures the ego vehicle’s intent matches, making it safe and coherent.
+
+Final Ranking (worst to best):
+1. {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90
+2. {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90
+3. {
+  "trigger": { "always": true },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90
+4. {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_left" }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90
+5. {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_right" }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90
+6. {
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "green",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "go_straight" }
+  },
+  "action": { "Mano_action": "launch" }
+} -- 0.90Function Call: 
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "left-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_left" }
+  },
+  "action": { "Mano_action": "stop" }
+}
+Reasonableness: High  
+Safety: High  
+Confidence: 0.90  
+Justification: Stopping for a red left-turn arrow within 20 m at an intersection complies with standard traffic controls and minimizes risk.
+
+Function Call: 
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "right-turn_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "turn_right" }
+  },
+  "action": { "Mano_action": "stop" }
+}
+Reasonableness: High  
+Safety: High  
+Confidence: 0.90  
+Justification: Stopping for a red right-turn arrow at an intersection follows regulations and prevents unsafe right turns on red arrow.
+
+Function Call: 
+{
+  "trigger": { "in": "intersection" },
+  "condition": {
+    "find_traffic_light": {
+      "color": "red",
+      "traffic_light_type": "straight-through_signal_light",
+      "CompOp": "<",
+      "distance_num": 20
+    },
+    "vehicle_state": { "driving_state": "go_straight" }
+  },
+  "action": { "Mano_action": "stop" }
+}
+Reasonableness: High  
+Safety: High  
+Confidence: 0.90  
+Justification: Stopping for a red straight-through signal at an intersection is standard and ensures safe compliance with traffic lights.
+
+Final Ranking (worst to best):  
+1. Left-turn red arrow stop -- 0.85  
+2. Right-turn red arrow stop -- 0.85  
+3. Straight-through red signal stop -- 0.85Function Call: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "traffic_light_type": "left-turn_signal_light",
+      "color": "red",
+      "CompOp": "<",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Mano_action": "stop"
+  }
+}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: It makes logical sense to always stop when a red left-turn arrow is detected within 30 m; this follows traffic rules, avoids collision risk, and the trigger, condition, and action form a coherent pattern.
+
+Final Ranking (worst to best):
+1. {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "traffic_light_type": "left-turn_signal_light",
+      "color": "red",
+      "CompOp": "<",
+      "distance_num": 30
+    }
+  },
+  "action": {
+    "Mano_action": "stop"
+  }
+} -- 0.90Function Call: Initial  
+Reasonableness: Medium  
+Safety: Low  
+Confidence: 0.70  
+Justification: It only sets an expected speed at a flashing yellow light without specifying any launch or deceleration behavior, making it incomplete and potentially unsafe.
+
+Function Call: Revised  
+Reasonableness: Medium  
+Safety: Medium  
+Confidence: 0.75  
+Justification: It adds a launch action and preparation distance, but proceeding at 20 km/h on a flashing yellow signal may still lack adequate caution.
+
+Final Ranking (worst to best):  
+1. Initial -- 0.70  
+2. Revised -- 0.75Function Call: {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","flash":true,"CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: Flashing red at a railway crossing clearly mandates stopping, matching regulations and ensuring maximum safety.
+
+Function Call: {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","flash":false,"CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}}
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: A steady red signal at a railway crossing also requires a full stop, which is fully compliant and safe.
+
+Function Call: {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}}
+Reasonableness: Medium  
+Safety: Medium  
+Appropriateness: Medium  
+Confidence: 0.70  
+Justification: Omitting the flash attribute makes the rule ambiguous, though stopping on red remains generally correct.
+
+Function Call: {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"black","CompOp":"<","distance_num":20}},"action":{"Mano_action":"launch"}}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.80  
+Justification: Treating a “black” (no active signal) as a free-go at a railway crossing is unsafe and contradicts best practice, since caution and a stop check are required.
+
+Final Ranking (worst to best):  
+1. {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"black","CompOp":"<","distance_num":20}},"action":{"Mano_action":"launch"}} -- 0.80  
+2. {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}} -- 0.70  
+3. {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","flash":false,"CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}} -- 0.90  
+4. {"trigger":{"in":"railway_crossing"},"condition":{"find_traffic_light":{"color":"red","flash":true,"CompOp":"<","distance_num":20}},"action":{"Mano_action":"stop"}} -- 0.90Function Call: 
+{
+  "trigger": {
+    "in": "urban_lane"
+  },
+  "condition": {
+    "is_special_lane": "fast_lane",
+    "vehicle_state": {
+      "speed": {
+        "CompOp": "<",
+        "speed_num": 40
+      }
+    }
+  },
+  "action": {
+    "Change_lane_action": {
+      "direction": "right",
+      "times": 1
+    }
+  }
+}
+Reasonableness: High  
+Safety: Medium  
+Appropriateness: High  
+Confidence: 0.85  
+Justification: It makes sense to move right when driving below the fast-lane speed limit, but it lacks explicit checks for safe gaps or obstacles before lane changing.
+
+Final Ranking (worst to best):
+1. Above function call -- 0.85Function Call: 
+{
+  "trigger": {
+    "in": "urban_lane"
+  },
+  "condition": {
+    "is_special_lane": "fast_lane",
+    "vehicle_state": {
+      "speed": {
+        "CompOp": ">=",
+        "speed_num": 60
+      }
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 60,
+      "limit_speed": true
+    }
+  }
+}
+Reasonableness: Low  
+Safety: Medium  
+Appropriateness: Medium  
+Confidence: 0.80  
+Justification: The rule tries to apply a “fast_lane” context on an urban lane and enforces 60 km/h without regard to typical urban speed limits, making it unreasonable; it is somewhat safe by capping speed but mislabels lane context.
+
+Function Call: 
+{
+  "trigger": {
+    "in": "urban_lane"
+  },
+  "condition": {
+    "is_special_lane": "fast_lane"
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+Reasonableness: Low  
+Safety: High  
+Appropriateness: Medium  
+Confidence: 0.70  
+Justification: Although it improperly designates a “fast_lane” in an urban road, it defaults to obeying posted limits, which is safe; the pattern is logically coherent but uses an invalid lane context.
+
+Final Ranking (worst to best):
+1. First function call -- 0.80  
+2. Second function call -- 0.70Function Call: {
+  "trigger": { "in": "urban_lane" },
+  "condition": { "is_special_lane": "fast_lane" },
+  "action": {
+    "Whether_allow_left_lane_change": false,
+    "Whether_allow_right_lane_change": true,
+    "Whether_allow_borrow_left_lane": false
+  }
+}
+Reasonableness: High  
+Safety: High  
+Confidence: 0.90  
+Justification: Restricting lane changes to the right when in the leftmost fast lane aligns with typical traffic rules and avoids illegal maneuvers.
+
+Function Call: {
+  "trigger": { "in": "urban_lane" },
+  "condition": { "is_special_lane": "non_motorized" },
+  "action": {
+    "Change_lane_action": { "direction": "left", "times": 1 },
+    "Whether_allow_right_lane_change": false
+  }
+}
+Reasonableness: High  
+Safety: High  
+Confidence: 0.90  
+Justification: Exiting a non-motorized lane by moving left is appropriate and prevents conflicts with bicycles, while disallowing right movements avoids off-road risks.
+
+Function Call: {
+  "trigger": { "in": "urban_lane" },
+  "condition": { "vehicle_state": { "driving_state": "go_straight" } },
+  "action": {
+    "Change_lane_action": { "direction": "right", "times": 1 },
+    "Whether_allow_left_lane_change": false
+  }
+}
+Reasonableness: Low  
+Safety: Low  
+Confidence: 0.80  
+Justification: Directing a lane change while the vehicle is committed to go straight is contradictory and could lead to unsafe, unexpected maneuvers.
+
+Final Ranking (worst to best):
+1. Function Call 3 -- 0.80  
+2. Function Call 1 -- 0.90  
+3. Function Call 2 -- 0.90Function Call: {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}}  
+Reasonableness: High  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.90  
+Justification: The rule correctly enforces speed‐limit compliance when a sign is within close range, matching common driving practice and regulations.
+
+Function Call: {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":100}},"action":{"Expected_speed":{"limit_speed":true}}}  
+Reasonableness: Medium  
+Safety: High  
+Appropriateness: High  
+Confidence: 0.85  
+Justification: Enforcing the limit too early (100 m out) may be overly conservative, though it remains safe and coherent.
+
+Final Ranking (worst to best):  
+1. {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":100}},"action":{"Expected_speed":{"limit_speed":true}}} -- 0.85  
+2. {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}} -- 0.90Function Call: {
+  "trigger": {"always": true},
+  "condition": {
+    "is_special_lane": "slow_lane",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_borrow_left_lane": true}
+}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.70  
+Justification: The lane type “slow_lane” is not defined in the schema and allowing borrowing the left lane without valid conditions is unsafe.
+
+Function Call: {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "not_special_lane": "fast_lane",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_borrow_left_lane": true}
+}
+Reasonableness: Medium  
+Safety: Medium  
+Appropriateness: Medium  
+Confidence: 0.80  
+Justification: Borrowing the left lane to overtake a slow vehicle on a motorway is logical, but missing checks on adjacent-lane traffic.
+
+Final Ranking (worst to best):
+1. {
+  "trigger": {"always": true},
+  "condition": {
+    "is_special_lane": "slow_lane",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_borrow_left_lane": true}
+} -- 0.70
+2. {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "not_special_lane": "fast_lane",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_borrow_left_lane": true}
+} -- 0.80Function Call: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "is_special_lane": "fast_lane"
+  },
+  "action": {
+    "Whether_priority_change_lane": true
+  }
+}
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.90  
+Justification: Always prioritizing lane changes solely because the vehicle is in a fast lane lacks context, violates typical lane‐use conventions, and can prompt unsafe, erratic maneuvers.
+
+Final Ranking (worst to best):
+1. {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "is_special_lane": "fast_lane"
+  },
+  "action": {
+    "Whether_priority_change_lane": true
+  }
+} -- 0.90Function Call: Initial Function Call  
+Reasonableness: Low  
+Safety: Low  
+Appropriateness: Low  
+Confidence: 0.90  
+Justification: The rule always triggers a left-lane change without regard for road context or speed, making it logically and operationally unsound.
+
+Function Call: Revised Function Call  
+Reasonableness: High  
+Safety: Medium  
+Appropriateness: High  
+Confidence: 0.88  
+Justification: It properly limits lane changes to motorways with clear obstacle distance checks, but buffer distances may be minimal for high-speed conditions.
+
+Final Ranking (worst to best):  
+1. Initial Function Call -- 0.90  
+2. Revised Function Call -- 0.88Function Call: 
+{
+  "trigger": { "always": true },
+  "condition": {
+    "vehicle_state": { "driving_state": "change_lane_to_right" },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": { "CompOp": ">", "distance_num": 20 }
+    }
+  },
+  "action": { "Whether_allow_right_lane_change": true }
+}
+Reasonableness: Low  
+Safety: Medium  
+Confidence: 0.80  
+Justification: The rule applies in all contexts without checking lane type, speed or oncoming traffic, making it overly simplistic. It does enforce a minimal clearance distance but lacks key safety checks.
+
+Function Call: 
+{
+  "trigger": { "in": "motorway" },
+  "condition": {
+    "vehicle_state": { "driving_state": "change_lane_to_right" },
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": { "CompOp": ">=", "distance_num": 50 },
+      "speed": { "CompOp": ">=", "speed_num": 0 }
+    },
+    "not_special_lane": "one_lane_same_direction"
+  },
+  "action": {
+    "Whether_allow_right_lane_change": true,
+    "Lateral_buffer_distance": 1.5,
+    "Dynamic_Obstacle_Overtake_distance": 3
+  }
+}
+Reasonableness: Medium  
+Safety: Medium  
+Confidence: 0.75  
+Justification: It correctly scopes the maneuver to a motorway and adds buffer distances, but the speed check is trivial and some parameters (e.g., overtake distance) may still be underspecified.
+
+Final Ranking (worst to best):
+1. First function call -- 0.80  
+2. Second function call -- 0.75

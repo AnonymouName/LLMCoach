@@ -1,0 +1,806 @@
+Function Call 1: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 2: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 3: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 4: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 5: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 6: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 7: {"trigger": {"always": true}, "condition": {}, "action": {}}
+Function Call 8: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "yellow", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Expected_speed": {"speed_number": 20, "limit_speed": false}}}
+Function Call 9: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 10: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": false, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 11: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 12: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": "<", "speed_num": 40}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 13: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 60}}}, "action": {"Expected_speed": {"speed_number": 60, "limit_speed": true}}}
+Function Call 14: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": true}}
+Function Call 15: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "slow_lane"}, "action": {"Whether_allow_left_lane_change": true, "Whether_allow_right_lane_change": false}}
+Function Call 16: {"trigger": {"in": "urban_lane"}, "condition": {"vehicle_state": {"driving_state": "go_straight"}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 17: {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}}
+Function Call 18: {"trigger": {"always": true}, "condition": {"is_special_lane": "slow_lane", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_allow_borrow_left_lane": true}}
+Function Call 19: {"trigger": {"always": true}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_priority_change_lane": true}}
+Function Call 20: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "left", "distance": {"CompOp": ">", "distance_num": 20}}}, "action": {"Whether_allow_left_lane_change": true}}
+Function Call 21: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}, "find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": ">", "distance_num": 20}}}, "action": {"Whether_allow_right_lane_change": true}}
+Function Call 22: {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"speed_limit_signal","CompOp":"<","distance_num":20}},"action":{"Expected_speed":{"limit_speed":true}}}
+Function Call 23: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 24: {"trigger": {"in": "highway"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Expected_speed": {"speed_number": 40}}}
+Function Call 25: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 50, "limit_speed": false}}}
+Function Call 26: {"trigger": {"in": "motorway"}, "condition": {"is_special_lane": "one_lane_same_direction"}, "action": {"Expected_speed": {"speed_number": 70, "limit_speed": false}}}
+Function Call 27: {"trigger": {"in": "non-motorized"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 28: {"trigger": {"in": "railway_crossing"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 29: {"trigger": {"in": "sharp_curve"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 30: {"trigger": {"in": "narrow_road"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 31: {"trigger": {"in": "narrow_bridge"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 32: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 33: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 34: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 35: {"trigger": {"in": "steep_slope"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 36: {"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 37: {"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 38: {"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 39: {"trigger": {"always": true}, "condition": {"weather_is": "sandstorm"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 40: {"trigger": {"always": true}, "condition": {"weather_is": "hail"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 41: {"trigger":{"in":"icy_road"},"action":{"Expected_speed":{"speed_number":30}}}
+Function Call 42: {"trigger":{"in":"muddy_road"},"action":{"Expected_speed":{"speed_number":30}}}
+Function Call 43: {"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":30}}}
+Function Call 44: {"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":15}}}
+Function Call 45: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 46: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 47: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 48: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.3, "Change_lane_action": {"direction": "left", "times": 1}}}
+Function Call 49: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 50: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 51: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite"}, "vehicle_state": {"speed": {"CompOp": ">", "speed_num": 0}}}, "action": {"Expected_speed": {"speed_number": 30}, "Lateral_buffer_distance": 1}}
+Function Call 52: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_priority_change_lane": true}}
+Function Call 53: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}, "direction": "opposite"}}, "action": {"Whether_allow_borrow_left_lane": true}}
+Function Call 54: {"trigger": {"in": "narrow_road"}, "condition": {"is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 20}}}
+Function Call 55: {"trigger": {"in": "steep_slope"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 15}}}
+Function Call 56: {"trigger": {"in": "mountain_road"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Whether_priority_change_lane": true}}
+Function Call 57: {"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 58: {"trigger": {"in": "narrow_bridge"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 59: {"trigger": {"always": true}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 60: {"trigger": {"always": true}, "condition": {"in": "railway_crossing"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 61: {"trigger": {"always": true}, "condition": {"in": "crosswalk"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 62: {"trigger": {"always": true}, "condition": {"in": "bridge"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 63: {"trigger": {"always": true}, "condition": {"in": "sharp_curve"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 64: {"trigger": {"always": true}, "condition": {"in": "steep_slope"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 65: {"trigger": {"always": true}, "condition": {"in": "tunnel"}, "action": {"Whether_allow_u_turn": false}}
+Function Call 66: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "no_u-turn_signal", "CompOp": ">", "distance_num": 20}, "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": ">", "distance_num": 10}}}, "action": {"Whether_allow_u_turn": true}}
+Function Call 67: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "reverse"}}, "action": {"Whether_allow_reverse": true}}
+Function Call 68: {"trigger": {"in": "railway_crossing"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 69: {"trigger": {"in": "intersection"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 70: {"trigger": {"in": "bridge"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 71: {"trigger": {"in": "sharp_bend"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 72: {"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 73: {"trigger": {"in": "tunnel"}, "condition": {}, "action": {"Whether_allow_reverse": false}}
+Function Call 74: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Change_lane_action": {"direction": "left", "times": 1}}}
+Function Call 75: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 76: {"trigger": {"in": "roundabout"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_priority_change_lane": false, "Whether_allow_borrow_lane": false, "Whether_allow_u_turn": false, "Whether_allow_reverse": false, "Mano_action": "wait"}}
+Function Call 77: {"trigger": {"in": "roundabout"}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "stop"}}
+Function Call 78: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "time_is": "night"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 79: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}, "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 80: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}, "find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 81: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 82: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "stop_signal", "distance": 5}}}
+Function Call 83: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}, "not_in": "intersection"}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "stop_signal", "distance": 5}}}
+Function Call 84: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20}, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "stop"}}
+Function Call 85: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right", "speed": {"CompOp": "<", "speed_num": 1}}}, "action": {"Mano_action": "launch"}}
+Function Call 86: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_go_straight"}}, "action": {"Mano_action": "launch"}}
+Function Call 87: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "launch"}}
+Function Call 88: {"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite"}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "stop"}}
+Function Call 89: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 90: {"trigger": {"always": true}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 91: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "intersection", "time": 3}}}
+Function Call 92: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "right", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "wait"}}
+Function Call 93: {"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}
+Function Call 94: {"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Mano_action": "stop"}}
+Function Call 95: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}
+Function Call 96: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 20}}}
+Function Call 97: {"trigger": {"in": "intersection"}, "condition": {"is_jam": true}, "action": {"Mano_action": "stop"}}
+Function Call 98: {"trigger": {"always": true}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 99: {"trigger": {"in": "crosswalk"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 100: {"trigger": {"in": "no_parking_zone"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 101: {"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}
+Function Call 102: {"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}
+Function Call 103: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 104: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 105: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 106: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 107: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 108: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 109: {"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}, "State_action": {"target": "hazard_warning_light", "whether_turn_on": true}, "State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 110: {"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 111: {"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 112: {"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}
+Function Call 113: {"trigger": {"in": "sha1rp_curve"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 114: {"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 115: {"trigger": {"in": "bridge"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 116: {"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 117: {"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 118: {"trigger": {"in": "sharp_bend"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 119: {"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 120: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 121: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 122: {"trigger":{"always":true},"condition":{"find_signal":{"signal_type":"no_honking_signal","CompOp":"<","distance_num":50}},"action":{"State_action":{"target":"horn","whether_turn_on":false}}}
+Function Call 123: {"trigger":{"in":"flooded_road"},"condition":{},"action":{"Mano_action":"stop","Creep_time":{"reason":"flooded_road","time":5},"Expected_speed":{"speed_number":20}}}
+Function Call 124: {"trigger":{"in":"flooded_bridge"},"condition":{},"action":{"Mano_action":"stop","Creep_time":{"reason":"flooded_bridge","time":5},"Expected_speed":{"speed_number":20}}}
+Function Call 125: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 126: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 127: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 128: {"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "left-turn_signal_light", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Mano_action": "launch"}}
+Function Call 129: {"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "right-turn_signal_light", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Mano_action": "launch"}}
+Function Call 130: {"trigger": {"in": "intersection"}, "condition": {"find_traffic_light": {"color": "green", "traffic_light_type": "straight-through_signal_light", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Mano_action": "launch"}}
+Function Call 131: {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "left-turn_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 132: {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "right-turn_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 133: {
+    "trigger": {"always": true},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "straight-through_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      }
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 134: {
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "left-turn_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      },
+      "vehicle_state": {"driving_state": "turn_left"}
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 135: {
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "right-turn_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      },
+      "vehicle_state": {"driving_state": "turn_right"}
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 136: {
+    "trigger": {"in": "intersection"},
+    "condition": {
+      "find_traffic_light": {
+        "color": "red",
+        "traffic_light_type": "straight-through_signal_light",
+        "CompOp": "<",
+        "distance_num": 20
+      },
+      "vehicle_state": {"driving_state": "go_straight"}
+    },
+    "action": {"Mano_action": "stop"}
+  }
+Function Call 137: {"trigger": {"always": true}, "condition": {}, "action": {}}
+Function Call 138: {"trigger": {"always": true}, "condition": {"find_traffic_light": {"traffic_light_type": "left-turn_signal_light", "color": "red", "CompOp": "<", "distance_num": 30}}, "action": {"Mano_action": "stop"}}
+Function Call 139: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "yellow",
+      "flash": true,
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 20,
+      "limit_speed": false
+    }
+  }
+}
+Function Call 140: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_traffic_light": {
+      "color": "yellow",
+      "flash": true,
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "launch",
+    "Expected_speed": {
+      "speed_number": 20
+    },
+    "Preparation_distance": {
+      "reason": "traffic_light",
+      "distance": 20
+    }
+  }
+}
+Function Call 141: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": true, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 142: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "flash": false, "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 143: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 144: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "red", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop"}}
+Function Call 145: {"trigger": {"in": "railway_crossing"}, "condition": {"find_traffic_light": {"color": "black", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "launch"}}
+Function Call 146: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": "<", "speed_num": 40}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 147: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": "<", "speed_num": 40}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 148: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane", "vehicle_state": {"speed": {"CompOp": ">=", "speed_num": 60}}}, "action": {"Expected_speed": {"speed_number": 60, "limit_speed": true}}}
+Function Call 149: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Expected_speed": {"limit_speed": true}}}
+Function Call 150: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": true}}
+Function Call 151: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "slow_lane"}, "action": {"Whether_allow_left_lane_change": true, "Whether_allow_right_lane_change": false}}
+Function Call 152: {"trigger": {"in": "urban_lane"}, "condition": {"vehicle_state": {"driving_state": "go_straight"}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 153: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": true, "Whether_allow_borrow_left_lane": false}}
+Function Call 154: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "non_motorized"}, "action": {"Change_lane_action": {"direction": "left", "times": 1}, "Whether_allow_right_lane_change": false}}
+Function Call 155: {"trigger": {"in": "urban_lane"}, "condition": {"vehicle_state": {"driving_state": "go_straight"}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}, "Whether_allow_left_lane_change": false}}
+Function Call 156: {
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+Function Call 157: {
+  "trigger": {"always": true},
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<",
+      "distance_num": 100
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+Function Call 158: {"trigger": {"always": true}, "condition": {"is_special_lane": "slow_lane", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_allow_borrow_left_lane": true}}
+Function Call 159: {"trigger": {"in": "motorway"}, "condition": {"not_special_lane": "fast_lane", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Whether_allow_borrow_left_lane": true}}
+Function Call 160: {"trigger": {"always": true}, "condition": {"is_special_lane": "fast_lane"}, "action": {"Whether_priority_change_lane": true}}
+Function Call 161: {
+  "trigger": {"always": true},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_left"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "left",
+      "distance": {"CompOp": ">", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_left_lane_change": true}
+}
+Function Call 162: {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_left"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "left",
+      "distance": {"CompOp": ">=", "distance_num": 50},
+      "speed": {"CompOp": ">=", "speed_num": 0}
+    },
+    "not_special_lane": "one_lane_same_direction"
+  },
+  "action": {
+    "Whether_allow_left_lane_change": true,
+    "Lateral_buffer_distance": 1.5,
+    "Dynamic_Obstacle_Overtake_distance": 3
+  }
+}
+Function Call 163: {
+  "trigger": {"always": true},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_right"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": {"CompOp": ">", "distance_num": 20}
+    }
+  },
+  "action": {"Whether_allow_right_lane_change": true}
+}
+Function Call 164: {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "vehicle_state": {"driving_state": "change_lane_to_right"},
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": {"CompOp": ">=", "distance_num": 50},
+      "speed": {"CompOp": ">=", "speed_num": 0}
+    },
+    "not_special_lane": "one_lane_same_direction"
+  },
+  "action": {
+    "Whether_allow_right_lane_change": true,
+    "Lateral_buffer_distance": 1.5,
+    "Dynamic_Obstacle_Overtake_distance": 3
+  }
+}
+Function Call 165: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    }
+  }
+}
+Function Call 166: {
+  "trigger": {
+    "always": true
+  },
+  "condition": {
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": "<=",
+      "distance_num": 200
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "limit_speed": true
+    },
+    "Preparation_distance": {
+      "reason": "speed_limit_signal",
+      "distance": 200
+    }
+  }
+}
+Function Call 167: {
+  "trigger": {"in": "urban_lane"},
+  "condition": {"is_special_lane": "without_centerline"},
+  "action": {"Expected_speed": {"speed_number": 30}}
+}
+Function Call 168: {
+  "trigger": {"in": "highway"},
+  "condition": {"is_special_lane": "without_centerline"},
+  "action": {"Expected_speed": {"speed_number": 40}}
+}
+Function Call 169: {
+  "trigger": {"in": "urban_lane"},
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": ">",
+      "distance_num": 1000
+    }
+  },
+  "action": {"Expected_speed": {"speed_number": 30}}
+}
+Function Call 170: {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": ">",
+      "distance_num": 1000
+    }
+  },
+  "action": {"Expected_speed": {"speed_number": 40}}
+}
+Function Call 171: {
+  "trigger": {"in": "urban_lane"},
+  "condition": {"is_special_lane": "one_lane_same_direction"},
+  "action": {"Expected_speed": {"speed_number": 50, "limit_speed": false}}
+}
+Function Call 172: {
+  "trigger": {"in": "motorway"},
+  "condition": {"is_special_lane": "one_lane_same_direction"},
+  "action": {"Expected_speed": {"speed_number": 70, "limit_speed": false}}
+}
+Function Call 173: {
+  "trigger": {"in": "urban_lane"},
+  "condition": {
+    "is_special_lane": "one_lane_same_direction",
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": ">",
+      "distance_num": 1000
+    }
+  },
+  "action": {"Expected_speed": {"speed_number": 50}}
+}
+Function Call 174: {
+  "trigger": {"in": "motorway"},
+  "condition": {
+    "is_special_lane": "one_lane_same_direction",
+    "find_signal": {
+      "signal_type": "speed_limit_signal",
+      "CompOp": ">",
+      "distance_num": 1000
+    }
+  },
+  "action": {"Expected_speed": {"speed_number": 70}}
+}
+Function Call 175: {
+    "trigger": {"in": "non-motorized"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 176: {
+    "trigger": {"in": "railway_crossing"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 177: {
+    "trigger": {"in": "sharp_curve"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 178: {
+    "trigger": {"in": "narrow_road"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 179: {
+    "trigger": {"in": "narrow_bridge"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 180: {
+    "trigger": {"in": "non-motorized"},
+    "condition": {"is_special_lane": "non_motorized"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 181: {
+    "trigger": {"in": "railway_crossing"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 182: {
+    "trigger": {"in": "sharp_curve"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 183: {
+    "trigger": {"in": "narrow_road"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 184: {
+    "trigger": {"in": "narrow_bridge"},
+    "action": {"Expected_speed": {"speed_number": 30}}
+  }
+Function Call 185: {
+    "trigger": {"in": "non-motorized"},
+    "condition": {"is_special_lane": "non_motorized"},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  }
+Function Call 186: {
+    "trigger": {"in": "railway_crossing"},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  }
+Function Call 187: {
+    "trigger": {"in": "sharp_curve"},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  }
+Function Call 188: {
+    "trigger": {"in": "narrow_road"},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  }
+Function Call 189: {
+    "trigger": {"in": "narrow_bridge"},
+    "action": {"Expected_speed": {"speed_number": 15}}
+  }
+Function Call 190: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 191: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 192: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 193: {"trigger": {"in": "steep_slope"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 194: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 195: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 196: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 197: {"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 198: {"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 199: {"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 200: {"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 201: {"trigger": {"always": true}, "condition": {"weather_is": "sandstorm"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 202: {"trigger": {"always": true}, "condition": {"weather_is": "hail"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 203: {"trigger": {"always": true}, "condition": {"weather_is": "foggy", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 204: {"trigger": {"always": true}, "condition": {"weather_is": "raining", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 205: {"trigger": {"always": true}, "condition": {"weather_is": "snowing", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 206: {"trigger": {"always": true}, "condition": {"weather_is": "sandstorm", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 207: {"trigger": {"always": true}, "condition": {"weather_is": "hail", "find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<=", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 208: {"trigger": {"in": "icy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 209: {"trigger": {"in": "muddy_road"}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 210: {"trigger": {"in": "icy_road"}, "condition": {"vehicle_state": {"speed": {"CompOp": ">", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 211: {"trigger": {"in": "muddy_road"}, "condition": {"vehicle_state": {"speed": {"CompOp": ">", "speed_num": 30}}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 212: {"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":30}}}
+Function Call 213: {"trigger":{"always":true},"condition":{"vehicle_state":{"driving_state":"towing"}},"action":{"Expected_speed":{"speed_number":15}}}
+Function Call 214: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "towing"}}, "action": {"Expected_speed": {"speed_number": 30}}}
+Function Call 215: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "towing"}}, "action": {"Expected_speed": {"speed_number": 15}}}
+Function Call 216: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 217: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 218: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 219: {"trigger": {"in": "motorway"}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": [{"target": "left_turn_light", "whether_turn_on": true}, {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}, {"target": "horn", "whether_turn_on": true}]}}
+Function Call 220: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 0.3, "Change_lane_action": {"direction": "left", "times": 1}}}
+Function Call 221: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction", "find_obstacle": {"obstacle_type": "vehicle", "position": "back", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}, "speed": {"CompOp": ">", "speed_num": 0}}}, "action": {"Whether_declearation": true, "Dynamic_Obstacle_Deceleration_ratio": 0.3, "Whether_allow_borrow_right_lane": true, "Lateral_buffer_distance": 1.5}}
+Function Call 222: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 223: {"trigger": {"in": "urban_lane"}, "condition": {"is_special_lane": "one_lane_same_direction", "find_obstacle": {"obstacle_type": "vehicle", "position": "back", "direction": "same", "distance": {"CompOp": ">=", "distance_num": 50}}}, "action": {"Whether_allow_borrow_right_lane": false, "State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 224: {"trigger": {"in": "one_lane_same_direction"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": ">", "distance_num": 50}}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 225: {"trigger": {"always": true}, "condition": {"is_special_lane": "one_lane_same_direction", "find_obstacle": {"obstacle_type": "vehicle", "position": "back", "direction": "same", "distance": {"CompOp": ">", "distance_num": 100}}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": false}, "Change_lane_action": {"direction": "right", "times": 1}}}
+Function Call 226: {
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite"
+    },
+    "vehicle_state": {
+      "speed": {
+        "CompOp": ">",
+        "speed_num": 0
+      }
+    }
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 30
+    },
+    "Lateral_buffer_distance": 1
+  }
+}
+Function Call 227: {
+  "trigger": {
+    "in": "without_centerline"
+  },
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": [
+      {
+        "obstacle_type": "vehicle",
+        "position": "front",
+        "direction": "opposite"
+      },
+      {
+        "obstacle_type": "pedestrian",
+        "position": "front",
+        "distance": {
+          "CompOp": ">",
+          "distance_num": 5
+        }
+      }
+    ]
+  },
+  "action": {
+    "Expected_speed": {
+      "speed_number": 30
+    },
+    "Lateral_buffer_distance": 2,
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 20
+  }
+}
+Function Call 228: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Whether_priority_change_lane": true}}
+Function Call 229: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Stopping_distance": {"reason": "intersection", "distance": 10}, "Whether_allow_borrow_left_lane": false, "Whether_allow_borrow_right_lane": false}}
+Function Call 230: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "all", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}, "direction": "opposite"}}, "action": {"Whether_allow_borrow_left_lane": true}}
+Function Call 231: {"trigger": {"in": "without_centerline"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50, "Min_stop_distance": 5}}
+Function Call 232: {"trigger": {"in": "narrow_road"}, "condition": {"is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 20}}}
+Function Call 233: {"trigger": {"in": "narrow_road"}, "condition": {"is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Mano_action": "wait", "Stopping_distance": {"reason": "intersection", "distance": 5}, "Wait_time": {"reason": "intersection", "time": 5}}}
+Function Call 234: {"trigger": {"in": "steep_slope"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"Expected_speed": {"speed_number": 15}}}
+Function Call 235: {"trigger": {"in": "steep_slope"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 50}}, "distance_to": {"road_type": "steep_slope", "CompOp": ">", "distance_num": 30}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "steep_slope", "distance": 3}, "Preparation_distance": {"reason": "steep_slope", "distance": 60}}}
+Function Call 236: {"trigger": {"in": "mountain_road"}, "condition": {"is_special_lane": "without_centerline"}, "action": {"Whether_priority_change_lane": true}}
+Function Call 237: {
+  "trigger": {"in": "narrow_road"},
+  "condition": {
+    "is_special_lane": "without_centerline",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "front",
+      "direction": "opposite",
+      "distance": {"CompOp": "<", "distance_num": 50}
+    }
+  },
+  "action": {"Mano_action": "stop"}
+}
+Function Call 238: {"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 239: {"trigger": {"in": "narrow_road"}, "condition": {"time_is": "night", "is_special_lane": "without_centerline", "find_obstacle": {"obstacle_type": "non-motorized", "position": "front", "distance": {"CompOp": "<", "distance_num": 150}}}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}}}
+Function Call 240: {"trigger": {"in": "intersection"}, "condition": {"find_signal": {"signal_type": "stop_signal", "CompOp": "<", "distance_num": 20}}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "stop_signal", "time": 5}}}
+Function Call 241: {
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_signal": {
+      "signal_type": "yield_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Wait_time": {"reason": "intersection", "time": 3}
+  }
+}
+Function Call 242: {
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_signal": {
+      "signal_type": "stop_signal",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Wait_time": {"reason": "intersection", "time": 3}
+  }
+}
+Function Call 243: {
+  "trigger": {"always": true},
+  "condition": {
+    "in": "intersection",
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {"Mano_action": "wait"}
+}
+Function Call 244: {
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "find_obstacle": {
+      "obstacle_type": "vehicle",
+      "position": "right",
+      "distance": {"CompOp": "<", "distance_num": 20}
+    }
+  },
+  "action": {
+    "Mano_action": "wait",
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 50
+  }
+}
+Function Call 245: {
+  "trigger": {"in": "intersection"},
+  "condition": {
+    "distance_to": {
+      "road_type": "intersection",
+      "CompOp": "<",
+      "distance_num": 20
+    }
+  },
+  "action": {
+    "Mano_action": "stop",
+    "Wait_time": {"reason": "intersection", "time": 3},
+    "Check_distance": 30,
+    "Whether_declearation": true,
+    "Static_Obstacle_Deceleration_ratio": 100
+  }
+}
+Function Call 246: {"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_signal": {"signal_type": "yield_signal", "CompOp": "<", "distance_num": 20}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}
+Function Call 247: {"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Whether_declearation": true, "Dynamic_Obstacle_Deceleration_ratio": 50}}
+Function Call 248: {"trigger": {"always": true}, "condition": {"in": "intersection", "not_in": "motorway", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Mano_action": "stop"}}
+Function Call 249: {"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 30}}, "vehicle_state": {"driving_state": "turn_left_or_turn_right"}}, "action": {"Mano_action": "stop", "Min_stop_distance": 5}}
+Function Call 250: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50}}
+Function Call 251: {"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_right"}}, "action": {"Whether_declaration": true, "Dynamic_Obstacle_Deceleration_ratio": 50, "Stopping_distance": {"reason": "intersection", "distance": 5}}}
+Function Call 252: {"trigger": {"always": true}, "condition": {"in": "intersection", "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 20}}}
+Function Call 253: {"trigger": {"in": "intersection"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "opposite", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "turn_left"}}, "action": {"Expected_speed": {"speed_number": 20}, "State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 254: {"trigger": {"in": "intersection"}, "condition": {"is_jam": true}, "action": {"Mano_action": "stop"}}
+Function Call 255: {"trigger": {"not_in": "intersection"}, "condition": {"is_jam": true, "distance_to": {"road_type": "intersection", "CompOp": "<=", "distance_num": 50}}, "action": {"Mano_action": "stop", "Stopping_distance": {"reason": "intersection", "distance": 10}}}
+Function Call 256: {"trigger": {"always": true}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 257: {"trigger": {"always": true}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}, "speed": {"CompOp": "<=", "speed_num": 5}}}, "action": {"Dynamic_Obstacle_Follow_distance": 2, "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 258: {"trigger": {"in": "crosswalk"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 259: {"trigger": {"in": "crosswalk"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}, "vehicle_state": {"driving_state": "go_straight"}}, "action": {"Forward_buffer_distance": 5, "Min_stop_distance": 3, "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 260: {"trigger": {"in": "no_parking_zone"}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}}}, "action": {"Mano_action": "stop", "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 261: {"trigger": {"not_in": ["crosswalk", "no_parking_zone"]}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 20}, "speed": {"CompOp": "<=", "speed_num": 5}}}, "action": {"Dynamic_Obstacle_Follow_distance": 2, "Whether_allow_borrow_lane": false, "Whether_allow_left_lane_change": false, "Whether_allow_right_lane_change": false}}
+Function Call 262: {"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}
+Function Call 263: {"trigger": {"in": "intersection"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}, "speed": {"CompOp": "<=", "speed_num": 5}}}, "action": {"Mano_action": "wait", "Preparation_distance": {"reason": "intersection", "distance": 15}}}
+Function Call 264: {"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}}}, "action": {"Mano_action": "wait", "Time_interval_for_lane_change": 5}}
+Function Call 265: {"trigger": {"in": "narrow_road"}, "condition": {"is_jam": true, "find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 10}, "speed": {"CompOp": "<=", "speed_num": 5}}}, "action": {"Mano_action": "wait", "Preparation_distance": {"reason": "keep_clear", "distance": 15}}}
+Function Call 266: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 267: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 268: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 269: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 270: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 271: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "u_turn"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 272: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "reverse"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 273: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "left_turn_light", "whether_turn_on": true}}}
+Function Call 274: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 275: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "turn_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}, "Preparation_distance": {"reason": "intersection", "distance": 30}}}
+Function Call 276: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 277: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}, "Check_distance": 50}}
+Function Call 278: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}}}
+Function Call 279: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "pull_over"}}, "action": {"State_action": {"target": "right_turn_light", "whether_turn_on": true}, "Preparation_distance": {"reason": "destination", "distance": 20}}}
+Function Call 280: {"trigger": {"always": true}, "condition": {"time_is": "night", "weather_is": "foggy"}, "action": {"State_action": {"target": "fog_light", "whether_turn_on": true}, "State_action": {"target": "hazard_warning_light", "whether_turn_on": true}, "State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 281: {"trigger": {"always": true}, "condition": {"weather_is": "foggy"}, "action": {"State_action": [{"target": "fog_light", "whether_turn_on": true}, {"target": "hazard_warning_light", "whether_turn_on": true}, {"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}]}}
+Function Call 282: {"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 283: {"trigger": {"always": true}, "condition": {"weather_is": "raining"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}]}}
+Function Call 284: {"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"State_action": {"target": "low_beam", "whether_turn_on": true}, "State_action": {"target": "position_light", "whether_turn_on": true}}}
+Function Call 285: {"trigger": {"always": true}, "condition": {"weather_is": "snowing"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}]}}
+Function Call 286: {"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}
+Function Call 287: {"trigger": {"always": true}, "condition": {"find_obstacle": {"obstacle_type": "vehicle", "position": "front", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}, "find_obstacle": {"obstacle_type": "vehicle", "position": "back", "direction": "same", "distance": {"CompOp": "<", "distance_num": 50}}}, "action": {"State_action": {"target": "high_beam", "whether_turn_on": false}}}
+Function Call 288: {"trigger": {"always": true}, "condition": {"time_is": "night"}, "action": {"State_action": [{"target": "low_beam", "whether_turn_on": true}, {"target": "position_light", "whether_turn_on": true}]}}
+Function Call 289: {"trigger": {"in": "steep_slope"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 290: {"trigger": {"in": "bridge"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 291: {"trigger": {"in": "crosswalk"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 292: {"trigger": {"in": "intersection"}, "condition": {"time_is": "night"}, "action": {"State_action": {"target": "alternated_between_high_and_low_beams", "whether_turn_on": true}}}
+Function Call 293: {"trigger": {"in": "sharp_bend"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 294: {"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "sharp_bend", "CompOp": "<", "distance_num": 50}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 30, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 295: {"trigger": {"in": "steep_slope"}, "condition": {}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 296: {"trigger": {"always": true}, "condition": {"distance_to": {"road_type": "steep_slope", "CompOp": "<", "distance_num": 50}}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 30, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 297: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 298: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_left"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 299: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"Whether_declearation": true, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 300: {"trigger": {"always": true}, "condition": {"vehicle_state": {"driving_state": "change_lane_to_right"}}, "action": {"State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 301: {"trigger": {"always": true}, "condition": {"is_jam": true}, "action": {"Whether_declearation": true, "Static_Obstacle_Deceleration_ratio": 50, "State_action": {"target": "horn", "whether_turn_on": true}}}
+Function Call 302: {
+  "trigger": { "always": true },
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_honking_signal",
+      "CompOp": "<",
+      "distance_num": 50
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "horn",
+      "whether_turn_on": false
+    }
+  }
+}
+Function Call 303: {
+  "trigger": { "always": true },
+  "condition": {
+    "find_signal": {
+      "signal_type": "no_honking_signal",
+      "CompOp": "<",
+      "distance_num": 50
+    }
+  },
+  "action": {
+    "State_action": {
+      "target": "horn",
+      "whether_turn_on": false
+    }
+  }
+}
+Function Call 304: {"trigger": {"in": "flooded_road"}, "condition": {}, "action": {"Mano_action": "stop", "Creep_time": {"reason": "flooded_road", "time": 5}, "Expected_speed": {"speed_number": 20}}}
+Function Call 305: {"trigger": {"in": "flooded_bridge"}, "condition": {}, "action": {"Mano_action": "stop", "Creep_time": {"reason": "flooded_bridge", "time": 5}, "Expected_speed": {"speed_number": 20}}}
+Function Call 306: {"trigger": {"in": "flooded_road"}, "condition": {}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "flooded_road", "time": 5}, "Stopping_distance": {"reason": "flooded_road", "distance": 10}}}
+Function Call 307: {"trigger": {"in": "flooded_bridge"}, "condition": {}, "action": {"Mano_action": "stop", "Wait_time": {"reason": "flooded_bridge", "time": 5}, "Stopping_distance": {"reason": "flooded_bridge", "distance": 10}}}

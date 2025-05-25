@@ -1,0 +1,2554 @@
+Law40_1: Directional signal lights indicate: When the green arrow light is on, allow vehicles in the lane to pass in the direction indicated;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" TrafficLightType "," Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" DrivingState ")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+TrafficLightType ::= "left-turn_signal_light" | "right-turn_signal_light";
+Color ::= "green";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_left" | "turn_right";
+ManoType ::= "launch";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    find_traffic_light(left-turn_signal_light, green, not_flash, <, 20m)
+    vehicle_state(turn_left)
+then
+    Mano(launch)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(right-turn_signal_light, green, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    Mano(launch)
+end
+
+Law40_2: Directional signal lights indicate: When the red arrow traffic light is illuminated, vehicles in the corresponding direction must stop and are prohibited from proceeding.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" TrafficLightType "," Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" DrivingState ("," "(" CompOp "," Speed ")")? ")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+TrafficLightType ::= "left-turn_signal_light" | "right-turn_signal_light";
+Color ::= "red";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_left" | "turn_right";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    find_traffic_light(left-turn_signal_light, red, not_flash, <, 20m)
+    vehicle_state(turn_left)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(right-turn_signal_light, red, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    Mano(stop)
+end
+```
+
+Law41: The arrow directions of the directional signal light indicate the intended movement: a left-pointing arrow signifies a left turn, an upward-pointing arrow signifies going straight, and a right-pointing arrow signifies a right turn.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" TrafficLightType "," Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+TrafficLightType ::= "left-turn_signal_light" | "straight-through_signal_light" | "right-turn_signal_light";
+Color ::= "green";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_left" | "go_straight" | "turn_right";
+Target ::= "left_turn_light" | "right_turn_light";
+Boolean ::= "True" | "False";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    find_traffic_light(left-turn_signal_light, green, not_flash, <, 20m)
+    vehicle_state(turn_left)
+then
+    State(left_turn_light, True)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(straight-through_signal_light, green, not_flash, <, 20m)
+    vehicle_state(go_straight)
+then
+    State(left_turn_light, False)
+    State(right_turn_light, False)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(right-turn_signal_light, green, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    State(right_turn_light, True)
+end
+
+Law42: The flashing warning signal light is a yellow light that continues to flash, reminding vehicles and pedestrians to pay attention when passing through, and pass after confirming safety.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | FindObstacleCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+TrafficLightType ::= "warning_signal_light";
+Color ::= "yellow";
+Flash ::= "flash";
+CompOp ::= "<";
+Distance ::= "50m";
+ObstacleType ::= "pedestrian" | "vehicle";
+Position ::= "front";
+Speed ::= "0km/h";
+ManoType ::= "wait";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    find_traffic_light(warning_signal_light, yellow, flash, <, 50m)
+    find_obstacle(pedestrian, front, (==, 0km/h))
+    find_obstacle(vehicle, front, (==, 0km/h))
+then
+    Mano(wait)
+end
+
+Law43: At a railway crossing where the roadway intersects with railway tracks, a flashing or steady red traffic light indicates that vehicles and pedestrians are prohibited from crossing. When the red light is off, it signifies that vehicles and pedestrians are allowed to proceed.
+Here are the BNF grammar rules and the corresponding program for the railway crossing scenario:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")";
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+Color ::= "red";
+Flash ::= "flash" | "not_flash";
+CompOp ::= "<";
+Distance ::= "50m";
+SignalType ::= "railway_crossing_signal";
+ManoType ::= "stop" | "launch";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    find_traffic_light(warning_signal_light, red, flash, <, 50m)
+    find_signal(railway_crossing_signal, <, 50m)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(warning_signal_light, black, not_flash, <, 50m)
+    find_signal(railway_crossing_signal, <, 50m)
+then
+    Mano(launch)
+end
+```
+
+The program consists of two rules:
+1. The first rule triggers when there's a flashing red traffic light at the railway crossing within 50 meters, and it commands the vehicle to stop.
+2. The second rule triggers when the traffic light is off (black) at the railway crossing within 50 meters, and it commands the vehicle to proceed (launch).
+
+Law44_1: Where there are two or more motor vehicle lanes in the same direction on the urban road, the leftmost lane shall be designated as the fast lane, and the rightmost lane as the slow lane. Motor vehicles traveling in the fast lane must maintain the speed specified for that lane. Vehicles unable to meet the required speed for the fast lane shall move to the slow lane.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= Action Action
+    | ChangeLaneAction
+    | SetNumberAction;
+ChangeLaneAction  ::= "Change_lane(" TurnDirection "," Times ")" ;
+SetNumberAction   ::= "Set(" Parameters_Number "," Value ")" ;
+RoadType ::= "urban_lane";
+SpecialLane ::= "fast_lane" | "slow_lane";
+CompOp ::= "<" | ">=";
+Distance ::= "100m";
+DrivingState ::= "go_straight";
+Speed ::= "posted_limit_speed" | Integer "km/h";
+Parameters_Number ::= "Expected_speed";
+Value ::= Integer "km/h";
+Times ::= "1";
+TurnDirection ::= "right";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(urban_lane)
+condition
+    is_special_lane(fast_lane)
+    vehicle_state(go_straight, (<, posted_limit_speed))
+then
+    Change_lane(right, 1)
+end
+
+trigger 
+    in(urban_lane)
+condition
+    is_special_lane(fast_lane)
+    vehicle_state(go_straight, (>=, posted_limit_speed))
+then
+    Set(Expected_speed, posted_limit_speed)
+end
+
+trigger 
+    in(urban_lane)
+condition
+    is_special_lane(slow_lane)
+    distance_to(fast_lane, <, 100m)
+then
+    Set(Expected_speed, 60km/h)
+end
+```
+
+This program implements the following logic:
+1. If in urban lane and in fast lane but not maintaining speed limit, change to right lane (slow lane)
+2. If in urban lane and in fast lane while maintaining speed limit, set expected speed to posted limit
+3. If in urban lane and in slow lane approaching fast lane (within 100m), reduce speed to 60km/h
+
+Law44_2: Where there are two or more motorized lanes in the same direction on the urban road, the left side is the fast lane and the right side is the slow lane. Motorcycles should drive in the rightmost lane.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= "is_special_lane(" SpecialLane ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= ChangeLaneAction
+    | SetBooleanAction;
+ChangeLaneAction ::= "Change_lane(" TurnDirection "," Times ")" ;
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+RoadType ::= "urban_lane";
+SpecialLane ::= "fast_lane" | "bus_lane";
+DrivingState ::= "go_straight";
+TurnDirection ::= "right";
+Times ::= "1";
+Parameters_Boolean ::= "Whether_allow_left_lane_change" | "Whether_allow_right_lane_change";
+Boolean ::= "False" | "True";
+```
+
+Program based on the EBNF grammar rules:
+```
+trigger
+    in(urban_lane)
+condition
+    is_special_lane(fast_lane)
+    vehicle_state(go_straight)
+then
+    Set(Whether_allow_left_lane_change, False)
+    Set(Whether_allow_right_lane_change, True)
+end
+
+trigger
+    in(urban_lane)
+condition
+    is_special_lane(bus_lane)
+    vehicle_state(go_straight)
+then
+    Change_lane(right, 1)
+end
+```
+
+This program implements the following logic:
+1. When in an urban lane and in the fast lane, it prevents lane changes to the left but allows them to the right
+2. When in an urban lane and in a bus lane (assuming this is the rightmost lane), it changes lane to the right (though this might need adjustment as it's already in the rightmost lane)
+3. The motorcycle-specific behavior would need additional rules to ensure it stays in the rightmost lane
+
+Law44_3: If there are traffic signs indicating the driving speed, drive at the indicated driving speed.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= "find_signal(" SignalType "," CompOp "," Distance ")";
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+SignalType ::= "speed_limit_signal";
+CompOp ::= "<";
+Distance ::= "50m";
+Parameters_Number ::= "Expected_speed";
+Value ::= "posted_limit_speed";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    find_signal(speed_limit_signal, <, 50m)
+then
+    Set(Expected_speed, posted_limit_speed)
+end
+
+Law44_4: Where there are two or more motorized lanes in the same direction on the road, the left side is the fast lane and the right side is the slow lane. When a motor vehicle in a slow lane overtakes the preceding vehicle, it can borrow the fast lane to drive.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | FindObstacleCondition
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ChangeLaneAction | ManoAction;
+ChangeLaneAction ::= "Change_lane(" TurnDirection "," Times ")" ;
+ManoAction ::= "Mano(" ManoType ")" ;
+RoadType ::= "motorway";
+SpecialLane ::= "fast_lane" | "slow_lane";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+CompOp ::= "<" | ">";
+Distance ::= "50m" | "100m";
+Speed ::= "posted_limit_speed";
+DrivingState ::= "go_straight";
+TurnDirection ::= "left";
+Times ::= "1";
+ManoType ::= "borrow_lane";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(motorway)
+condition
+    is_special_lane(slow_lane)
+    find_obstacle(vehicle, front, same, (<, 50m), (>, posted_limit_speed))
+    vehicle_state(go_straight)
+then
+    Change_lane(left, 1)
+    Mano(borrow_lane)
+end
+
+Law44_5: When there are two or more lanes for motor vehicles traveling in the same direction, a motor vehicle shall change lanes only when it does not impede the normal movement of vehicles already traveling in the target lane.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | VehicleStateCondition;
+Action ::= ChangeLaneAction 
+    | SetBooleanAction;
+ChangeLaneAction ::= "Change_lane(" TurnDirection "," Times ")";
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+RoadType ::= "urban_lane" | "motorway";
+ObstacleType ::= "vehicle";
+Position ::= "left" | "right";
+Direction ::= "same";
+CompOp ::= ">" | "==";
+Distance ::= "50m" | "100m";
+Speed ::= "posted_limit_speed";
+VehicleStateCondition ::= "vehicle_state(" DrivingState ")";
+DrivingState ::= "change_lane_to_left" | "change_lane_to_right";
+TurnDirection ::= "left" | "right";
+Times ::= "1";
+Parameters_Boolean ::= "Whether_allow_left_lane_change" | "Whether_allow_right_lane_change";
+Boolean ::= "True";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(urban_lane)
+condition
+    find_obstacle(vehicle, left, same, (>, 50m))
+    distance_to(urban_lane, ==, 100m)
+    vehicle_state(change_lane_to_right)
+then
+    Change_lane(right, 1)
+    Set(Whether_allow_right_lane_change, True)
+end
+
+trigger 
+    in(motorway)
+condition
+    find_obstacle(vehicle, right, same, (>, 50m))
+    distance_to(motorway, ==, 100m)
+    vehicle_state(change_lane_to_left)
+then
+    Change_lane(left, 1)
+    Set(Whether_allow_left_lane_change, True)
+end
+```
+
+Law45_1: Motor vehicles must not exceed the speed indicated by the speed limit signs and markings on the road.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_signal(" SignalType "," CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+SignalType ::= "speed_limit_signal";
+CompOp ::= ">";
+Distance ::= "50m";
+Parameters_Number ::= "Expected_speed";
+Value ::= "posted_limit_speed";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    find_signal(speed_limit_signal, >, 50m)
+    vehicle_state((>, posted_limit_speed))
+then
+    Set(Expected_speed, posted_limit_speed)
+end
+```
+
+Law45_2: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads without a road centerline, urban roads are 30 kilometers per hour, and highways are 40 kilometers per hour;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= "is_special_lane(" SpecialLane ")"
+    | "!" "is_special_lane(" SpecialLane ")";
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+RoadType ::= "urban_road" | "highway";
+SpecialLane ::= "without_centerline";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "40km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(urban_road)
+condition
+    is_special_lane(without_centerline)
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(highway)
+condition
+    is_special_lane(without_centerline)
+then
+    Set(Expected_speed, 40km/h)
+end
+```
+
+Law45_3: On roads without speed limit signs and markings, motor vehicles shall not exceed the following maximum speeds. For roads with only one motor vehicle lane in the same direction, 50 kilometers per hour for urban roads and 70 kilometers per hour for highways.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+RoadType ::= "urban_lane" | "motorway";
+SpecialLane ::= "one_lane_same_direction";
+CompOp ::= "==";
+Distance ::= "0m";
+Parameters_Number ::= "Expected_speed";
+Value ::= "50km/h" | "70km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(urban_lane)
+condition
+    is_special_lane(one_lane_same_direction)
+    distance_to(urban_lane, ==, 0m)
+then
+    Set(Expected_speed, 50km/h)
+end
+
+trigger 
+    in(motorway)
+condition
+    is_special_lane(one_lane_same_direction)
+    distance_to(motorway, ==, 0m)
+then
+    Set(Expected_speed, 70km/h)
+end
+```
+
+Law46_1: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When entering or leaving a non-motorized vehicle lane, passing through a railway crossing, a sharp curve, a narrow road, or a narrow bridge;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+RoadType ::= "non-motorized" | "railway_crossing" | "sharp_curve" | "narrow_road" | "narrow_bridge";
+Condition ::= "vehicle_state(" ("(" CompOp "," Speed ")")? ")";
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "15km/h";
+CompOp ::= ">";
+Speed ::= "30km/h" | "15km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(non-motorized)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(railway_crossing)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(sharp_curve)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(narrow_road)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(narrow_bridge)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(non-motorized)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger 
+    in(railway_crossing)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger 
+    in(sharp_curve)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger 
+    in(narrow_road)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger 
+    in(narrow_bridge)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+```
+
+Law46_2: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When making a U-turn, turning, or going downhill;
+Based on the query, here are the BNF grammar rules and corresponding program:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")"
+    | "is_special_lane(" SpecialLane ")";
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+DrivingState ::= "u_turn" | "turn_left" | "turn_right" | "reverse";
+SpecialLane ::= "steep_slope";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "15km/h";
+CompOp ::= ">" | "<";
+Speed ::= "30km/h" | "15km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger
+    always
+condition
+    vehicle_state(u_turn)
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger
+    always
+condition
+    vehicle_state(turn_left)
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger
+    always
+condition
+    vehicle_state(turn_right)
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger
+    always
+condition
+    is_special_lane(steep_slope)
+    vehicle_state(reverse)
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger
+    always
+condition
+    is_special_lane(steep_slope)
+then
+    Set(Expected_speed, 15km/h)
+end
+```
+
+Note: The program includes separate rules for:
+1. U-turn condition (30km/h limit)
+2. Left turn condition (30km/h limit)
+3. Right turn condition (30km/h limit)
+4. Going downhill (steep slope) for regular vehicles (30km/h limit)
+5. Going downhill (steep slope) for tractors/special vehicles (15km/h limit)
+
+The conditions are separated to handle the different scenarios mentioned in the query, with appropriate speed limits for each situation.
+
+Law46_3: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: In case of fog, rain, snow, sand dust, hail, the visibility is within 50 meters;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "weather_is(" Weather ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+Weather ::= "fog" | "rain" | "snow" | "sandstorm" | "hail";
+CompOp ::= "<=";
+Distance ::= "50m";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "15km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    (weather_is(fog) or weather_is(rain) or weather_is(snow) or weather_is(sandstorm) or weather_is(hail))
+    distance_to(visibility, <=, 50m)
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    always 
+condition
+    (weather_is(fog) or weather_is(rain) or weather_is(snow) or weather_is(sandstorm) or weather_is(hail))
+    distance_to(visibility, <=, 50m)
+    vehicle_state(towing)
+then
+    Set(Expected_speed, 15km/h)
+end
+```
+
+Note: I've made some assumptions since not all vehicle types mentioned in the query (tractors, battery vehicles, wheeled special machinery) were explicitly defined in the original EBNF rules. I used "towing" as a proxy for these special vehicle types. A more complete implementation would require extending the EBNF to include these specific vehicle types.
+
+Law46_4: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When driving on icy and muddy roads;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ")" ;
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")" ;
+RoadType ::= "icy_road" | "muddy_road";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "15km/h";
+Speed ::= "30km/h" | "15km/h";
+CompOp ::= ">";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(icy_road)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(muddy_road)
+condition
+    vehicle_state((>, 30km/h))
+then
+    Set(Expected_speed, 30km/h)
+end
+
+trigger 
+    in(icy_road)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+
+trigger 
+    in(muddy_road)
+condition
+    vehicle_state((>, 15km/h))
+then
+    Set(Expected_speed, 15km/h)
+end
+```
+
+Law46_5: When a motor vehicle encounters one of the following conditions, the maximum speed shall not exceed 30 kilometers per hour, and the maximum speed of tractors, battery vehicles, and wheeled special machinery vehicles shall not exceed 15 kilometers per hour: When towing a malfunctioning motor vehicle.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= "vehicle_state(" DrivingState ")" ;
+Action ::= SetNumberAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")" ;
+DrivingState ::= "towing";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h" | "15km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    vehicle_state(towing)
+then
+    Set(Expected_speed, 30km/h)
+end
+trigger 
+    always 
+condition
+    vehicle_state(towing)
+then
+    Set(Expected_speed, 15km/h)
+end
+```
+
+Note: The program includes two rules to handle both cases mentioned in the query:
+1. For regular motor vehicles (30 km/h limit)
+2. For tractors, battery vehicles, and wheeled special machinery vehicles (15 km/h limit)
+
+In a real implementation, you would likely need additional conditions to distinguish between these vehicle types, but the current grammar doesn't include vehicle type identification capabilities.
+
+Law47_1: When a motor vehicle is overtaking, it shall turn on the left turn signal in advance, change the use of far and low beam lights, or honk the horn.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= Action Action
+    | StateAction
+    | ManoAction;
+StateAction ::= "State(" Target "," Boolean ")";
+ManoAction ::= "Mano(" ManoType ")" ;
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+CompOp ::= "<";
+Distance ::= "50m";
+Speed ::= "posted_limit_speed";
+DrivingState ::= "go_straight";
+Target ::= "left_turn_light" | "high_beam" | "low_beam" | "horn";
+Boolean ::= "True";
+ManoType ::= "borrow_lane";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    find_obstacle(vehicle, front, same, (<, 50m), (<, posted_limit_speed))
+    vehicle_state(go_straight)
+then
+    State(left_turn_light, True)
+    State(high_beam, True)
+    State(low_beam, False)
+    State(horn, True)
+    Mano(borrow_lane)
+end
+
+Law47_2: On a road with no center line of the road or with only one motor vehicle lane in the same direction, when the vehicle in front meets the vehicle behind and sends an overtaking signal, if conditions permit, the speed should be reduced and the road should be made to the right. After confirming that there is a sufficient safety distance, the following vehicle should pass from the left side of the vehicle in front, and after pulling the necessary safety distance from the overtaken vehicle, turn on the right turn signal and drive back to the original lane.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | VehicleStateCondition;
+Action ::= Action Action 
+    | SetBooleanAction 
+    | SetNumberAction 
+    | ChangeLaneAction 
+    | ManoAction 
+    | StateAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+SetNumberAction   ::= "Set(" Parameters_Number "," Value ")" ;
+ChangeLaneAction  ::= "Change_lane(" TurnDirection "," Times ")" ;
+ManoAction        ::= "Mano(" ManoType ")" ;
+StateAction       ::= "State(" Target "," Boolean ")";
+
+RoadType ::= "narrow_road" | "one_lane_same_direction";
+SpecialLane ::= "without_centerline" | "one_lane_same_direction";
+ObstacleType ::= "vehicle";
+Position ::= "front" | "back";
+Direction ::= "same";
+SignalType ::= "overtaking_signal";
+CompOp ::= "<" | ">" | "==";
+Distance ::= "50m" | "100m";
+Speed ::= "posted_limit_speed";
+DrivingState ::= "go_straight";
+Parameters_Boolean ::= "Whether_allow_left_lane_change" | "Whether_allow_right_lane_change";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h";
+TurnDirection ::= "left" | "right";
+Times ::= "1";
+ManoType ::= "pull_over";
+Target ::= "right_turn_light";
+Boolean ::= "True" | "False";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(narrow_road)
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, same, (>, 50m))
+    find_obstacle(vehicle, back, same, (>, 100m))
+    find_signal(overtaking_signal, ==, 0m)
+    vehicle_state(go_straight)
+then
+    Set(Whether_allow_left_lane_change, True)
+    Set(Expected_speed, 30km/h)
+    Change_lane(right, 1)
+    Mano(pull_over)
+    State(right_turn_light, True)
+end
+
+trigger 
+    in(one_lane_same_direction)
+condition
+    is_special_lane(one_lane_same_direction)
+    find_obstacle(vehicle, front, same, (>, 50m))
+    find_obstacle(vehicle, back, same, (>, 100m))
+    find_signal(overtaking_signal, ==, 0m)
+    vehicle_state(go_straight)
+then
+    Set(Whether_allow_left_lane_change, True)
+    Set(Expected_speed, 30km/h)
+    Change_lane(right, 1)
+    Mano(pull_over)
+    State(right_turn_light, True)
+end
+```
+
+Law48_1: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: Slow down and keep to the right, and keep a necessary safe distance from other vehicles and pedestrians;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | "is_special_lane(" SpecialLane ")";
+Action ::= Action Action
+    | SetNumberAction
+    | StateAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+StateAction ::= "State(" Target "," Boolean ")";
+RoadType ::= "without_centerline" | "one_lane_same_direction";
+ObstacleType ::= "vehicle" | "pedestrian";
+Position ::= "front" | "left" | "right";
+Direction ::= "opposite";
+CompOp ::= "<";
+Distance ::= "50m";
+Speed ::= "30km/h";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h";
+Target ::= "low_beam" | "high_beam";
+Boolean ::= "True" | "False";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(without_centerline)
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, opposite, (<, 50m))
+then
+    Set(Expected_speed, 30km/h)
+    State(low_beam, True)
+    State(high_beam, False)
+end
+
+trigger 
+    in(one_lane_same_direction)
+condition
+    is_special_lane(one_lane_same_direction)
+    find_obstacle(pedestrian, right, (<, 50m))
+    find_obstacle(vehicle, front, opposite, (<, 50m))
+then
+    Set(Expected_speed, 30km/h)
+    State(low_beam, True)
+    State(high_beam, False)
+end
+
+Law48_2: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: When an obstacle is present on the road, the vehicle on the side without the obstacle shall have the right of way. However, if the vehicle on the side with the obstacle has already entered the obstructed section while the vehicle on the unobstructed side has not, the vehicle on the side with the obstacle shall have the right of way.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | FindObstacleCondition
+    | "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")";
+Action ::= Action Action
+    | SetBooleanAction
+    | ManoAction;
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+ManoAction ::= "Mano(" ManoType ")";
+RoadType ::= "without_centerline" | "one_lane_same_direction";
+SpecialLane ::= "without_centerline";
+CompOp ::= "<" | ">";
+ObstacleType ::= "all";
+Position ::= "left" | "right";
+Direction ::= "opposite";
+Distance ::= "50m" | "100m";
+Speed ::= "0km/h";
+Parameters_Boolean ::= "Whether_priority_change_lane";
+Boolean ::= "True" | "False";
+ManoType ::= "stop" | "wait";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger
+    in(without_centerline)
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(all, left, opposite, (<, 50m))
+    distance_to(without_centerline, >, 100m)
+then
+    Set(Whether_priority_change_lane, False)
+    Mano(wait)
+end
+
+trigger
+    in(without_centerline)
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(all, right, opposite, (<, 50m))
+    distance_to(without_centerline, >, 100m)
+then
+    Set(Whether_priority_change_lane, True)
+    Mano(stop)
+end
+```
+
+This program implements the following logic:
+1. When driving on a road without centerline and an obstacle is detected on the left side (opposite direction) within 50m, while the road continues for more than 100m ahead, the vehicle will set priority to False and wait
+2. When driving on a road without centerline and an obstacle is detected on the right side (opposite direction) within 50m, while the road continues for more than 100m ahead, the vehicle will set priority to True and stop
+
+The rules handle both scenarios mentioned in the query regarding right of way when obstacles are present on roads without central isolation.
+
+Law48_3: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On a narrow slope, the uphill side goes first; but when the downhill side has reached halfway and the uphill side is not uphill, the downhill side goes first;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | FindObstacleCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")";
+Action ::= ManoAction;
+RoadType ::= "narrow_road" | "steep_slope";
+SpecialLane ::= "without_centerline" | "one_lane_same_direction";
+CompOp ::= ">" | "<";
+Distance ::= "50m" | "100m";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "opposite";
+Speed ::= "5km/h";
+ManoType ::= "stop" | "wait";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(narrow_road) 
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, opposite, (>, 50m))
+    distance_to(steep_slope, <, 100m)
+then
+    Mano(wait)
+end
+
+trigger 
+    in(steep_slope) 
+condition
+    is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, opposite, (<, 50m), (>, 5km/h))
+then
+    Mano(stop)
+end
+```
+
+This program implements the following logic:
+1. When on a narrow road without centerline and approaching a steep slope (within 100m) with an opposite vehicle more than 50m away, the vehicle should wait (uphill has priority)
+2. When on a steep slope without centerline and an opposite vehicle is approaching within 50m at speed greater than 5km/h, the vehicle should stop (downhill has priority if they've already started descending)
+
+Law48_4: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: On the narrow mountain road, the side that does not rely on the mountain shall go first;
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= "is_special_lane(" SpecialLane ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= ManoAction;
+RoadType ::= "mountain_road" | "narrow_road";
+SpecialLane ::= "without_centerline";
+CompOp ::= "<";
+Distance ::= "50m";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(mountain_road)
+condition
+    is_special_lane(without_centerline)
+    distance_to(narrow_road, <, 50m)
+then
+    Mano(stop)
+end
+```
+
+This program implements the rule that when driving on a narrow mountain road without centerline markings, the vehicle should stop to let the side that doesn't rely on the mountain go first. The condition checks if the vehicle is on a mountain road without centerline and approaching a narrow section (within 50m), then executes a stop action.
+
+Law48_5: On roads without central isolation facilities or without a central line, motor vehicles come in opposite directions. The following regulations should be observed when driving: During nighttime driving, low beam headlights shall be used when approaching an oncoming vehicle from a distance greater than 150 meters. Low beams shall also be used when encountering non-motorized vehicles on narrow roads or narrow bridges at night.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always" | "in(" RoadType ")" | "not_in(" RoadType ")";
+Condition ::= Condition Condition
+    | "time_is(" Time ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ")";
+Action ::= StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+RoadType ::= "narrow_road" | "narrow_bridge";
+Time ::= "night";
+CompOp ::= ">" | "<=";
+Distance ::= "150m";
+ObstacleType ::= "vehicle" | "non-motorized";
+Position ::= "front";
+Direction ::= "opposite";
+Target ::= "low_beam";
+Boolean ::= "True" | "False";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger
+    always
+condition
+    time_is(night)
+    distance_to(vehicle, opposite, front, (>, 150m))
+then
+    State(low_beam, True)
+end
+
+trigger
+    in(narrow_road)
+condition
+    time_is(night)
+    find_obstacle(non-motorized, front, (<=, 150m))
+then
+    State(low_beam, True)
+end
+
+trigger
+    in(narrow_bridge)
+condition
+    time_is(night)
+    find_obstacle(non-motorized, front, (<=, 150m))
+then
+    State(low_beam, True)
+end
+```
+
+This program implements the following behaviors:
+1. When driving at night and an oncoming vehicle is detected more than 150m away, turn on low beams
+2. When on a narrow road at night and encountering a non-motorized vehicle within 150m, turn on low beams
+3. When on a narrow bridge at night and encountering a non-motorized vehicle within 150m, turn on low beams
+
+The rules use distance measurements and time conditions to determine when to activate the low beam headlights according to the specified driving regulations.
+
+Law49_1: Motor vehicles shall not make a U-turn at locations where U-turns or left turns are prohibited by signs or markings, or at railway crossings, pedestrian crossings, bridges, sharp curves, steep slopes, tunnels, or other road sections where danger is likely to occur.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "in(" RoadType ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")";
+Action ::= SetBooleanAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+RoadType ::= "railway_crossing" | "crosswalk" | "bridge" | "sharp_curve" | "steep_slope" | "tunnel";
+SignalType ::= "no_u-turn_signal" | "no_left_turn_signal";
+SpecialLane ::= "without_centerline";
+Parameters_Boolean ::= "Whether_allow_u_turn";
+Boolean ::= "False";
+Color ::= "red";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    in(railway_crossing) or 
+    in(crosswalk) or 
+    in(bridge) or 
+    in(sharp_curve) or 
+    in(steep_slope) or 
+    in(tunnel) or 
+    find_signal(no_u-turn_signal, <, 20m) or 
+    find_signal(no_left_turn_signal, <, 20m) or 
+    is_special_lane(without_centerline)
+then
+    Set(Whether_allow_u_turn, False)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(motor_vehicle_signal_light, red, not_flash, <, 20m)
+then
+    Set(Whether_allow_u_turn, False)
+end
+```
+
+This program implements two rules:
+1. The first rule prohibits U-turns in all the specified dangerous locations and when no U-turn signs are detected within 20 meters
+2. The second rule prohibits U-turns when a red traffic light is detected within 20 meters
+
+Both rules set the "Whether_allow_u_turn" parameter to False when their conditions are met.
+
+Law49_2: Motor vehicles can make U-turns where there is no prohibition of turning or left-turning signs or markings, but it shall not hinder the passage of other vehicles and pedestrians in normal driving.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | FindObstacleCondition
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= Action Action
+    | SetBooleanAction
+    | ManoAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+ManoAction ::= "Mano(" ManoType ")" ;
+SpecialLane ::= "without_centerline";
+SignalType ::= "no_u-turn_signal" | "no_left_turn_signal";
+CompOp ::= "==" | ">";
+Distance ::= "50m";
+ObstacleType ::= "pedestrian" | "vehicle";
+Position ::= "right" | "left" | "front";
+Direction ::= "same";
+Speed ::= "0.5km/h";
+DrivingState ::= "u_turn";
+Parameters_Boolean ::= "Whether_allow_u_turn";
+Boolean ::= "True";
+ManoType ::= "launch";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    !find_signal(no_u-turn_signal, ==, 50m)
+    !find_signal(no_left_turn_signal, ==, 50m)
+    is_special_lane(without_centerline)
+    find_obstacle(pedestrian, right, same, (>, 10m))
+    find_obstacle(pedestrian, left, same, (>, 10m))
+    find_obstacle(pedestrian, front, same, (>, 10m))
+    find_obstacle(vehicle, right, same, (>, 10m))
+    find_obstacle(vehicle, left, same, (>, 10m))
+    find_obstacle(vehicle, front, same, (>, 10m))
+    vehicle_state(u_turn, (<, 0.5km/h))
+then
+    Set(Whether_allow_u_turn, True)
+    Mano(launch)
+end
+```
+
+Law50: When a motor vehicle is reversing, the driver must ensure that the area behind the vehicle is clear of other vehicles, pedestrians, and obstacles, and may only begin reversing after confirming it is safe to do so. Reversing is prohibited at railway crossings, intersections, one-way streets, bridges, sharp curves, steep slopes, and tunnels.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "!" Condition
+    | "in(" RoadType ")"
+    | FindObstacleCondition
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+RoadType ::= "railway_crossing" | "intersection" | "one_lane_same_direction" | "bridge" | "sharp_curve" | "steep_slope" | "tunnel";
+ObstacleType ::= "vehicle" | "pedestrian" | "others";
+Position ::= "back";
+Distance ::= "1m";
+DrivingState ::= "reverse";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    find_obstacle(vehicle, back, (<=, 1m))
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    find_obstacle(pedestrian, back, (<=, 1m))
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    find_obstacle(others, back, (<=, 1m))
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(railway_crossing)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(intersection)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(one_lane_same_direction)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(bridge)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(sharp_curve)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(steep_slope)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(reverse)
+    in(tunnel)
+then
+    Mano(stop)
+end
+```
+
+Law51_1: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At an intersection with a guide lane, drive into the guide lane according to the required direction of travel;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | "is_special_lane(" SpecialLane ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ChangeLaneAction;
+RoadType ::= "intersection";
+Color ::= "green" | "red" | "yellow";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "50m";
+SpecialLane ::= "left_turn_signal_light" | "right_turn_signal_light" | "straight-through_signal_light";
+DrivingState ::= "turn_left" | "turn_right" | "go_straight";
+ChangeLaneAction ::= "Change_lane(" TurnDirection "," Times ")" ;
+TurnDirection ::= "left" | "right";
+Times ::= "1";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(green, not_flash, <, 50m)
+    is_special_lane(left_turn_signal_light)
+    vehicle_state(turn_left)
+then
+    Change_lane(left, 1)
+end
+
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(green, not_flash, <, 50m)
+    is_special_lane(right_turn_signal_light)
+    vehicle_state(turn_right)
+then
+    Change_lane(right, 1)
+end
+
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(green, not_flash, <, 50m)
+    is_special_lane(straight-through_signal_light)
+    vehicle_state(go_straight)
+then
+    Change_lane(right, 0)  // Maintain current lane for straight
+end
+
+Law51_2: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Those who are preparing to enter the roundabout let motor vehicles already in the intersection go ahead;
+Here are the BNF grammar rules and program based on the EBNF grammar rules for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction | SetWaitAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+SetWaitAction ::= "Set(" ("Wait_time" | "Creep_time") "," CheckType "," Integer ")" ;
+RoadType ::= "roundabout";
+Color ::= "green" | "red" | "yellow";
+Flash ::= "not_flash";
+CompOp ::= "<" | ">";
+Distance ::= "20m" | "10m";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+Speed ::= "0.5km/h";
+ManoType ::= "wait" | "launch";
+CheckType ::= "roundabout";
+Integer ::= "3";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(roundabout)
+condition
+    find_traffic_light(green, not_flash, <, 20m)
+    find_obstacle(vehicle, front, same, (>, 10m), (>, 0.5km/h))
+    vehicle_state((<, 1km/h))
+then
+    Mano(wait)
+    Set(Wait_time, roundabout, 3)
+end
+
+trigger 
+    in(roundabout)
+condition
+    find_traffic_light(green, not_flash, <, 20m)
+    find_obstacle(vehicle, front, same, (>, 10m), (==, 0km/h))
+then
+    Mano(launch)
+end
+```
+
+Law51_3: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Turn on the turn signal when turning, and turn on the low beam when driving at night;
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "time_is(" Time ")"
+    | "vehicle_state(" DrivingState ")";
+Action ::= Action Action
+    | StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+RoadType ::= "intersection";
+Time ::= "night";
+DrivingState ::= "turn_left" | "turn_right";
+Target ::= "left_turn_light" | "right_turn_light" | "low_beam";
+Boolean ::= "True";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    vehicle_state(turn_left)
+then
+    State(left_turn_light, True)
+end
+
+trigger 
+    in(intersection)
+condition
+    vehicle_state(turn_right)
+then
+    State(right_turn_light, True)
+end
+
+trigger 
+    in(intersection)
+condition
+    time_is(night)
+then
+    State(low_beam, True)
+end
+```
+
+This program implements the following behaviors:
+1. When in an intersection and turning left, turn on the left turn signal
+2. When in an intersection and turning right, turn on the right turn signal
+3. When in an intersection at night, turn on the low beam headlights
+
+The rules follow the traffic regulations mentioned in the query by:
+- Detecting when the vehicle is in an intersection (the Event)
+- Checking for turning state or nighttime (the Conditions)
+- Activating the appropriate lights (the Actions)
+
+Law51_4: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: Pass in turn when encountering a release signal;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+Color ::= "green";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "go_straight";
+ManoType ::= "launch";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(intersection) 
+condition
+    find_traffic_light(green, not_flash, <, 20m)
+    vehicle_state(go_straight)
+then
+    Mano(launch)
+end
+
+Law51_5: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When the stop signal is encountered, stop outside the stop line in turn. If there is no stop line, stop outside the intersection;
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= ManoAction;
+RoadType ::= "intersection";
+SignalType ::= "stop_signal";
+CompOp ::= "<";
+Distance ::= "20m" | "0m";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    find_signal(stop_signal, <, 20m)
+    distance_to(intersection, <, 0m)
+then
+    Mano(stop)
+end
+
+trigger 
+    in(intersection)
+condition
+    find_signal(stop_signal, <, 20m)
+    distance_to(intersection, >, 0m)
+then
+    Mano(stop)
+end
+```
+
+This program consists of two rules:
+1. The first rule triggers when the vehicle is in an intersection and detects a stop signal within 20m, but hasn't yet crossed into the intersection (distance > 0m). It commands the vehicle to stop.
+2. The second rule triggers when the vehicle is in an intersection and detects a stop signal within 20m, but has already crossed the stop line (distance <= 0m). It also commands the vehicle to stop.
+
+Both rules implement the requirement to stop for stop signals, whether outside the stop line (if it exists) or outside the intersection (if no stop line exists).
+
+Law51_6: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: When turning right when there is a car in the same lane waiting for the release signal, stop and wait in turn;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | FindObstacleCondition
+    | "is_jam";
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+Color ::= "red" | "green";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "10m";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+Speed ::= "0km/h";
+ManoType ::= "stop" | "wait";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(intersection) 
+condition
+    find_traffic_light(motor_vehicle_signal_light, red, not_flash, <, 10m)
+    find_obstacle(vehicle, front, same, (==, 0km/h))
+    is_jam
+then
+    Mano(stop)
+end
+
+trigger 
+    in(intersection) 
+condition
+    find_traffic_light(motor_vehicle_signal_light, green, not_flash, <, 10m)
+    find_obstacle(vehicle, front, same, (==, 0km/h))
+then
+    Mano(wait)
+end
+
+Law51_7: Motor vehicles passing through intersections controlled by traffic lights shall pass in accordance with the following regulations: At intersections with no direction indicator lights, turning motor vehicles let straight vehicles and pedestrians go first. Right-turning motor vehicles traveling in the opposite direction let left-turning vehicles go first.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "!" Condition
+    | "is_special_lane(" SpecialLane ")"
+    | FindObstacleCondition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= Action Action 
+    | SetWaitAction 
+    | ManoAction;
+SetWaitAction     ::= "Set(" "Wait_time" "," CheckType "," Integer ")" ;
+ManoAction        ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+SpecialLane ::= "without_centerline";
+ObstacleType ::= "vehicle" | "pedestrian";
+Position ::= "front";
+Direction ::= "opposite";
+TrafficLightType ::= "motor_vehicle_signal_light";
+Color ::= "green" | "red";
+Flash ::= "not_flash";
+CompOp ::= "<" | "==";
+Distance ::= "10m" | "5m";
+DrivingState ::= "turn_left" | "turn_right" | "go_straight";
+Speed ::= "0km/h";
+ManoType ::= "wait" | "stop";
+CheckType ::= "intersection";
+Integer ::= "3";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    !is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, (==, 10m))
+    find_obstacle(pedestrian, front, (==, 5m))
+    vehicle_state(turn_left)
+    vehicle_state(turn_right, (==, 0km/h))
+then
+    Set(Wait_time, intersection, 3)
+    Mano(wait)
+end
+
+trigger 
+    in(intersection)
+condition
+    !is_special_lane(without_centerline)
+    find_obstacle(vehicle, front, opposite, (==, 10m))
+    vehicle_state(turn_right)
+    vehicle_state(turn_left, (==, 0km/h))
+then
+    Set(Wait_time, intersection, 3)
+    Mano(stop)
+end
+```
+
+This program implements the following behaviors:
+1. At intersections without direction indicator lights, turning vehicles will wait for straight vehicles and pedestrians
+2. Right-turning vehicles encountering left-turning vehicles from the opposite direction will stop and let them go first
+3. The system will wait for 3 seconds in these situations before proceeding
+4. The rules only activate when the vehicle is in an intersection and there's no centerline marking
+
+Law52_1: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: If there are traffic signs or road markings, the vehicle must yield to the party with the right of way.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "!" Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+Action ::= Action Action 
+    | SetBooleanAction 
+    | ManoAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+ManoAction        ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+SpecialLane ::= "without_centerline";
+SignalType ::= "yield_signal" | "stop_signal";
+CompOp ::= "<" | "==";
+Distance ::= "20m" | "0m";
+Color ::= "black";
+Flash ::= "not_flash";
+Parameters_Boolean ::= "Whether_stop_before_entering_uncontrolled_intersection";
+Boolean ::= "True";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(black, not_flash, ==, 0m)
+    find_signal(yield_signal, <, 20m)
+then
+    Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+    Mano(stop)
+end
+
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(black, not_flash, ==, 0m)
+    find_signal(stop_signal, <, 20m)
+then
+    Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+    Mano(stop)
+end
+
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(black, not_flash, ==, 0m)
+    is_special_lane(without_centerline)
+then
+    Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+    Mano(stop)
+end
+```
+
+Law52_2: When a motor vehicle passes through an intersection that is neither controlled by traffic lights nor directed by traffic police, it must comply with the following provisions: If there are no traffic signs or road markings to control the intersection, the vehicle must stop and look before entering, and yield the right of way to traffic coming from the right.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "!" Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | "find_signal(" SignalType ", " CompOp "," Distance ")"
+    | FindObstacleCondition
+    | "is_jam"
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= Action Action 
+    | SetBooleanAction 
+    | ManoAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+ManoAction        ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+Color ::= "black";
+Flash ::= "not_flash";
+CompOp ::= "==";
+Distance ::= "0m";
+SignalType ::= "yield_signal" | "stop_signal";
+ObstacleType ::= "vehicle";
+Position ::= "right";
+Direction ::= "same";
+DrivingState ::= "go_straight";
+Parameters_Boolean ::= "Whether_stop_before_entering_uncontrolled_intersection";
+Boolean ::= "True";
+ManoType ::= "stop";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(intersection)
+condition
+    !find_traffic_light(black, not_flash, ==, 0m)
+    !find_signal(yield_signal, ==, 0m)
+    !find_signal(stop_signal, ==, 0m)
+    find_obstacle(vehicle, right, same, (<=, 10m))
+    vehicle_state(go_straight)
+then
+    Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+    Mano(stop)
+end
+
+Law52_3: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it must also comply with the following provisions: Vehicles making turns must yield to vehicles going straight.
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "is_special_lane(" SpecialLane ")"
+    | "vehicle_state(" DrivingState ")"
+    | "find_obstacle(" ObstacleType "," Position "," "(" CompOp "," Distance ")" ")";
+Action ::= ManoAction;
+RoadType ::= "intersection";
+SpecialLane ::= "without_centerline";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_left" | "turn_right";
+ManoAction ::= "Mano(" ManoType ")";
+ManoType ::= "stop";
+
+program based on the EBNF grammar rules:
+trigger 
+    in(intersection)
+condition
+    is_special_lane(without_centerline)
+    vehicle_state(turn_left)
+    find_obstacle(vehicle, front, (<, 20m))
+then
+    Mano(stop)
+end
+
+trigger 
+    in(intersection)
+condition
+    is_special_lane(without_centerline)
+    vehicle_state(turn_right)
+    find_obstacle(vehicle, front, (<, 20m))
+then
+    Mano(stop)
+end
+
+Law52_4: When a motor vehicle passes through an intersection that is not controlled by traffic lights or directed by traffic police, it shall also comply with the following provision: A right-turning motor vehicle traveling in the opposite direction must yield to a left-turning vehicle.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "!" Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+RoadType ::= "intersection";
+Color ::= "black";
+Flash ::= "not_flash";
+CompOp ::= "==";
+Distance ::= "0m";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "opposite";
+DrivingState ::= "turn_left" | "turn_right";
+ManoType ::= "stop";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    find_traffic_light(black, not_flash, ==, 0m)
+    find_obstacle(vehicle, front, opposite, (==, 0m))
+    vehicle_state(turn_right)
+then
+    Mano(stop)
+end
+```
+
+This program implements the rule that when in an uncontrolled intersection (no traffic lights), if the vehicle is turning right and encounters an opposite vehicle that is turning left, it should stop to yield. The conditions check for:
+1. Being in an intersection
+2. No active traffic lights (black light at 0m distance)
+3. Presence of an opposite-direction vehicle in front
+4. The vehicle's own state is turning right
+The action is to stop (yield).
+
+Law53_1: When a motor vehicle encounters traffic congestion at an intersection ahead, it shall stop and wait in order outside the intersection and must not enter the intersection.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= "is_jam" 
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= ManoAction 
+    | SetBooleanAction;
+ManoAction ::= "Mano(" ManoType ")";
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+RoadType ::= "intersection";
+CompOp ::= "<";
+Distance ::= "50m";
+ManoType ::= "stop";
+Parameters_Boolean ::= "Whether_stop_before_entering_uncontrolled_intersection";
+Boolean ::= "True";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    is_jam
+    distance_to(intersection, <, 50m)
+then
+    Mano(stop)
+    Set(Whether_stop_before_entering_uncontrolled_intersection, True)
+end
+```
+
+Law53_2: When a motor vehicle encounters a motor vehicle in front of the vehicle parked in a queue or is driving slowly, it shall be queued in sequence, and shall not pass through or overtake from both sides of the vehicle in front and shall not park and wait in the area of crosswalks or no parking zone.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "is_jam"
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | "in(" RoadType ")"
+    | "not_in(" RoadType ")";
+Action ::= ManoAction
+    | SetBooleanAction;
+ManoAction ::= "Mano(" ManoType ")";
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+CompOp ::= "<";
+Distance ::= "10m";
+Speed ::= "5km/h";
+RoadType ::= "crosswalk" | "no_parking_zone";
+ManoType ::= "stop" | "wait";
+Parameters_Boolean ::= "Whether_allow_left_lane_change" | "Whether_allow_right_lane_change";
+Boolean ::= "False";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    always 
+condition
+    is_jam
+    find_obstacle(vehicle, front, same, (<, 10m), (<, 5km/h))
+    not_in(crosswalk)
+    not_in(no_parking_zone)
+then
+    Mano(stop)
+    Mano(wait)
+    Set(Whether_allow_left_lane_change, False)
+    Set(Whether_allow_right_lane_change, False)
+end
+```
+
+This program:
+1. Triggers always (continuously checks conditions)
+2. Conditions:
+   - Detects traffic jam (is_jam)
+   - Finds a vehicle in front moving slowly (<5km/h) within 10m
+   - Ensures vehicle is not in crosswalk or no-parking zone
+3. Actions:
+   - Stops the vehicle (Mano(stop))
+   - Waits in queue (Mano(wait))
+   - Disables lane changes from both sides (Set commands)
+
+Law53_3: When a motor vehicle is at an intersection or road section with reduced lanes, if there is a motor vehicle in front of the vehicle parked in a queue or driving slowly, one vehicle in each lane shall alternately drive into the intersection or road section with reduced lanes.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+Condition ::= Condition Condition
+    | "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")"
+    | "is_jam";
+Action ::= SetBooleanAction 
+    | SetNumberAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+SetNumberAction   ::= "Set(" Parameters_Number "," Value ")" ;
+RoadType ::= "intersection" | "narrow_road";
+ObstacleType ::= "vehicle";
+Position ::= "front";
+Direction ::= "same";
+CompOp ::= "<";
+Distance ::= "5m";
+Speed ::= "5km/h";
+Parameters_Boolean ::= "Whether_priority_change_lane";
+Boolean ::= "True";
+Parameters_Number ::= "Time_interval_for_lane_change";
+Value ::= "5";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(intersection)
+condition
+    find_obstacle(vehicle, front, same, (<, 5m), (<, 5km/h))
+    is_jam
+then
+    Set(Whether_priority_change_lane, True)
+    Set(Time_interval_for_lane_change, 5)
+end
+
+trigger 
+    in(narrow_road)
+condition
+    find_obstacle(vehicle, front, same, (<, 5m), (<, 5km/h))
+    is_jam
+then
+    Set(Whether_priority_change_lane, True)
+    Set(Time_interval_for_lane_change, 5)
+end
+```
+
+Law57_1: Motor vehicles shall use turn signals in accordance with the following provisions: When turning left, changing lanes to the left, preparing to overtake, leaving a parking place or turning around, the left turn signal shall be turned on in advance;
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" DrivingState ")" ;
+Action ::= StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+DrivingState ::= "turn_left" | "change_lane_to_left" | "pull_over" | "u_turn";
+Target ::= "left_turn_light";
+Boolean ::= "True";
+
+program based on the EBNF grammar rules:
+trigger 
+    always 
+condition
+    vehicle_state(turn_left)
+then
+    State(left_turn_light, True)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(change_lane_to_left)
+then
+    State(left_turn_light, True)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(pull_over)
+then
+    State(left_turn_light, True)
+end
+
+trigger 
+    always 
+condition
+    vehicle_state(u_turn)
+then
+    State(left_turn_light, True)
+end
+
+Law57_2: Motor vehicles shall use turn signals in accordance with the following provisions: When turning right, changing lanes to the right, driving back to the original lane after overtaking, or stopping by the side of the road, the right turn signal should be turned on in advance.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "vehicle_state(" DrivingState ")";
+Condition ::= Condition Condition
+    | "time_is(" Time ")"
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+DrivingState ::= "turn_right" | "change_lane_to_right" | "pull_over";
+Time ::= "daytime" | "night";
+RoadType ::= "urban_lane" | "intersection" | "motorway";
+CompOp ::= "<" | ">";
+Distance ::= "50m" | "100m";
+Target ::= "right_turn_light";
+Boolean ::= "True";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    vehicle_state(turn_right)
+then
+    State(right_turn_light, True)
+end
+
+trigger 
+    vehicle_state(change_lane_to_right)
+then
+    State(right_turn_light, True)
+end
+
+trigger 
+    vehicle_state(pull_over)
+then
+    State(right_turn_light, True)
+end
+
+trigger 
+    vehicle_state(turn_right)
+condition
+    distance_to(intersection, <, 50m)
+then
+    State(right_turn_light, True)
+end
+
+trigger 
+    vehicle_state(change_lane_to_right)
+condition
+    distance_to(motorway, <, 100m)
+then
+    State(right_turn_light, True)
+end
+```
+
+This program:
+1. Turns on the right turn signal when:
+   - The vehicle is turning right
+   - Changing lanes to the right
+   - Pulling over to stop
+2. Includes additional rules to activate the turn signal in advance (50m before intersections, 100m before motorway lane changes)
+3. Uses the State action to control the right turn light (setting it to True to activate)
+
+Law58: When a motor vehicle is driving at night in areas without streetlights, under poor lighting conditions, or in fog, rain, snow, sand, hail, or other low visibility situations, the headlights, position lights, and rear position lights should be turned on. However, when driving close to a vehicle ahead or behind in the same direction, high beams must not be used. On foggy days, fog lights and hazard warning flashers should be activated.
+Here's the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always" | "in(" RoadType ")" | "not_in(" RoadType ")";
+Condition ::= Condition Condition
+    | "time_is(" Time ")"
+    | "weather_is(" Weather ")"
+    | FindObstacleCondition
+    | "distance_to(" RoadType "," CompOp "," Distance ")";
+Action ::= Action Action 
+    | StateAction
+    | SetBooleanAction;
+StateAction ::= "State(" Target "," Boolean ")";
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")";
+Time ::= "night";
+Weather ::= "foggy" | "raining" | "snowing" | "sandstorm" | "hail";
+RoadType ::= "urban_lane" | "motorway" | "mountain_road";
+ObstacleType ::= "vehicle";
+Position ::= "front" | "back";
+Direction ::= "same";
+CompOp ::= "<" | ">";
+Distance ::= "50m" | "100m";
+Target ::= "low_beam" | "high_beam" | "position_light" | "fog_light" | "hazard_warning_light";
+Parameters_Boolean ::= "Whether_declearation";
+Boolean ::= "True" | "False";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger
+    always
+condition
+    time_is(night)
+    not_in(urban_lane)
+    not_in(motorway)
+then
+    State(low_beam, True)
+    State(position_light, True)
+    Set(Whether_declearation, True)
+end
+
+trigger
+    always
+condition
+    weather_is(foggy)
+    or weather_is(raining)
+    or weather_is(snowing)
+    or weather_is(sandstorm)
+    or weather_is(hail)
+then
+    State(low_beam, True)
+    State(position_light, True)
+    State(fog_light, True)
+    Set(Whether_declearation, True)
+end
+
+trigger
+    always
+condition
+    find_obstacle(vehicle, front, same, (<, 100m))
+    or find_obstacle(vehicle, back, same, (<, 50m))
+then
+    State(high_beam, False)
+end
+
+trigger
+    always
+condition
+    weather_is(foggy)
+then
+    State(fog_light, True)
+    State(hazard_warning_light, True)
+end
+```
+
+Law59_1: When a vehicle passes sharp bends, slopes, arch bridges, crosswalks or intersections at night, it shall alternately use far and near lights.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")" | "time_is(" Time ")";
+Condition ::= Condition Condition
+    | "time_is(" Time ")";
+Action ::= StateAction;
+StateAction ::= "State(" Target "," Boolean ")";
+RoadType ::= "sharp_bend" | "steep_slope" | "arch_bridge" | "crosswalk" | "intersection";
+Time ::= "night";
+Target ::= "alternated_between_high_and_low_beams";
+Boolean ::= "True";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(sharp_bend)
+    time_is(night)
+then
+    State(alternated_between_high_and_low_beams, True)
+end
+
+trigger 
+    in(steep_slope)
+    time_is(night)
+then
+    State(alternated_between_high_and_low_beams, True)
+end
+
+trigger 
+    in(arch_bridge)
+    time_is(night)
+then
+    State(alternated_between_high_and_low_beams, True)
+end
+
+trigger 
+    in(crosswalk)
+    time_is(night)
+then
+    State(alternated_between_high_and_low_beams, True)
+end
+
+trigger 
+    in(intersection)
+    time_is(night)
+then
+    State(alternated_between_high_and_low_beams, True)
+end
+```
+
+The program creates rules for each of the specified road types (sharp bends, steep slopes, arch bridges, crosswalks, and intersections) when it's nighttime, and sets the vehicle to alternate between high and low beams in each case.
+
+Law59_2: When a motor vehicle is approaching sharp bends, the top of a ramp and other road sections that affect the safe sight distance, as well as overtaking or in an emergency, the vehicle should slow down and honk the horn.
+Here are the BNF grammar rules and program for the given query:
+
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")" | "not_in(" RoadType ")";
+Condition ::= Condition Condition
+    | "distance_to(" RoadType "," CompOp "," Distance ")"
+    | "is_jam"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")? ")" ;
+Action ::= Action Action 
+    | SetNumberAction 
+    | StateAction;
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+StateAction ::= "State(" Target "," Boolean ")";
+RoadType ::= "sharp_bend" | "steep_slope";
+CompOp ::= "<";
+Distance ::= "100m";
+DrivingState ::= "go_straight" | "change_lane_to_left" | "change_lane_to_right";
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h";
+Target ::= "horn";
+Boolean ::= "True";
+```
+
+Program based on the EBNF grammar rules:
+```
+trigger
+    in(sharp_bend)
+condition
+    distance_to(sharp_bend, <, 100m)
+then
+    Set(Expected_speed, 30km/h)
+    State(horn, True)
+end
+
+trigger
+    in(steep_slope)
+condition
+    distance_to(steep_slope, <, 100m)
+then
+    Set(Expected_speed, 30km/h)
+    State(horn, True)
+end
+
+trigger
+    always
+condition
+    vehicle_state(change_lane_to_left)
+    vehicle_state(change_lane_to_right)
+then
+    Set(Expected_speed, 30km/h)
+    State(horn, True)
+end
+
+trigger
+    always
+condition
+    is_jam
+then
+    Set(Expected_speed, 30km/h)
+    State(horn, True)
+end
+```
+
+This program:
+1. Slows down and honks when approaching sharp bends or steep slopes within 100m
+2. Slows down and honks when changing lanes
+3. Slows down and honks when in a traffic jam
+4. Uses appropriate parameters from the grammar to implement the required behavior
+
+Law62_2: Driving a motor vehicle shall not have the following behaviors: Honk horns in areas or road sections where honking is prohibited.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")" | "not_in(" RoadType ")";
+Condition ::= "find_signal(" SignalType ", " CompOp "," Distance ")";
+Action ::= SetBooleanAction;
+SetBooleanAction ::= "Set(" Parameters_Boolean "," Boolean ")";
+RoadType ::= "no_honking_zone";
+SignalType ::= "no_honking_signal";
+CompOp ::= "<";
+Distance ::= "50m";
+Parameters_Boolean ::= "Whether_declearation";
+Boolean ::= "False";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(no_honking_zone)
+condition
+    find_signal(no_honking_signal, <, 50m)
+then
+    Set(Whether_declearation, False)
+end
+```
+
+This program implements the rule that when the vehicle is in a no-honking zone and detects a no-honking signal within 50 meters, it will disable the horn (set Whether_declearation to False). This prevents the vehicle from honking in prohibited areas.
+
+Law64: When a motor vehicle is passing a flooded Road or flooded Bridge, it shall stop and check the water conditions, and after confirming safety, pass at low speed.
+BNF grammar rules:
+```
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "in(" RoadType ")";
+RoadType ::= "flooded_road" | "flooded_bridge";
+Condition ::= "is_jam";
+Action ::= Action Action
+    | ManoAction
+    | SetCheckAction
+    | SetNumberAction;
+ManoAction ::= "Mano(" ManoType ")";
+SetCheckAction ::= "Set(" "Whether_check" "," CheckType "," Boolean ")";
+SetNumberAction ::= "Set(" Parameters_Number "," Value ")";
+ManoType ::= "stop" | "wait" | "launch";
+CheckType ::= "flooded_road" | "flooded_bridge";
+Boolean ::= "True";
+Parameters_Number ::= "Expected_speed";
+Value ::= "10km/h";
+```
+
+program based on the EBNF grammar rules:
+```
+trigger 
+    in(flooded_road)
+condition
+    is_jam
+then
+    Mano(stop)
+    Set(Whether_check, flooded_road, True)
+    Mano(wait)
+    Set(Expected_speed, 10km/h)
+    Mano(launch)
+end
+
+trigger 
+    in(flooded_bridge)
+condition
+    is_jam
+then
+    Mano(stop)
+    Set(Whether_check, flooded_bridge, True)
+    Mano(wait)
+    Set(Expected_speed, 10km/h)
+    Mano(launch)
+end
+```
+
