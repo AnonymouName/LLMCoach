@@ -1,0 +1,144 @@
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | FindObstacleCondition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+FindObstacleCondition ::= "find_obstacle(" ObstacleType "," Position ("," Direction)? "," "(" CompOp "," Distance ")" ("," "(" CompOp "," Speed ")")? ")" ;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+Color ::= "green";
+Flash ::= "not_flash";
+CompOp ::= "<" | ">";
+Distance ::= "20m" | "10m";
+ObstacleType ::= "pedestrian" | "vehicle";
+Position ::= "right" | "left" | "front";
+Speed ::= "0.5km/h";
+ManoType ::= "launch";
+
+trigger 
+    always 
+condition
+    find_traffic_light_state(green, not_flash, <, 20m)
+    find_obstacle(pedestrian, right, (>, 10m))
+    find_obstacle(pedestrian, front, (>, 10m))
+    find_obstacle(pedestrian, left, (>, 10m))
+    find_obstacle(vehicle, right, (>, 10m))
+    vehicle_state((<, 0.5km/h))
+then
+    Mano(launch)
+end
+
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")";
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+Color ::= "yellow";
+Flash ::= "not_flash";
+CompOp ::= "<" | ">";
+Distance ::= "20m" | "5m";
+ManoType ::= "stop";
+
+trigger 
+    always 
+condition
+    find_traffic_light(yellow, not_flash, <, 20m)
+    find_traffic_light(yellow, not_flash, >, 5m)
+then
+    Mano(stop)
+end
+
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= ManoAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+Color ::= "red";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_left_or_go_straight";
+ManoType ::= "stop";
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= Action Action
+    | ManoAction
+    | SetBooleanAction
+    | SetNumberAction;
+ManoAction ::= "Mano(" ManoType ")" ;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+SetNumberAction   ::= "Set(" Parameters_Number "," Value ")" ;
+Color ::= "red";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_right";
+Speed ::= "1km/h";
+ManoType ::= "launch";
+Parameters_Boolean ::= "Whether_red_light_turn_right";
+Boolean ::= True;
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h";
+UDrive ::= Rule+;
+Rule ::= "trigger" Event ("condition" Condition)? "then" Action "end";
+Event ::= "always";
+Condition ::= Condition Condition
+    | "find_traffic_light(" (TrafficLightType ",")? Color "," (Flash ",")? CompOp "," Distance ")"
+    | VehicleStateCondition;
+VehicleStateCondition ::= "vehicle_state(" (DrivingState ",")? ("(" CompOp "," Speed ")")? ("," "(" CompOp "," Acceleration ")")? ("," "(" Target+ ")")?")" ;
+Action ::= Action Action
+    | SetBooleanAction
+    | SetNumberAction;
+SetBooleanAction  ::= "Set(" Parameters_Boolean "," Boolean ")" ;
+SetNumberAction   ::= "Set(" Parameters_Number "," Value ")" ;
+Color ::= "red";
+Flash ::= "not_flash";
+CompOp ::= "<";
+Distance ::= "20m";
+DrivingState ::= "turn_right";
+Parameters_Boolean ::= "Whether_red_light_turn_right";
+Boolean ::= True;
+Parameters_Number ::= "Expected_speed";
+Value ::= "30km/h";
+
+trigger 
+    always 
+condition
+    find_traffic_light(red, not_flash, <, 20m)
+    vehicle_state(turn_left_or_go_straight)
+then
+    Mano(stop)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(red, not_flash, <, 20m)
+    vehicle_state(turn_right, (<, 1km/h))
+then
+    Mano(launch)
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(red, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end

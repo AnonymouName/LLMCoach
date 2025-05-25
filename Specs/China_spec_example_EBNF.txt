@@ -1,0 +1,52 @@
+trigger 
+    always 
+condition                                    
+    find_traffic_light(motor_vehicle_signal_light, green, not_flash, <, 20m)         
+    find_obstacle(pedestrian, right, (>, 10m))                                
+    find_obstacle(pedestrian, front, (>, 10m))
+    find_obstacle(pedestrian, left, (>, 10m))
+    find_obstacle(vehicle, right, (>, 10m))
+    vehicle_state((<, 1km/h))
+then
+    Mano(launch)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(motor_vehicle_signal_light, yellow, not_flash, <, 20m)
+    find_traffic_light(motor_vehicle_signal_light, yellow, not_flash, >, 5m)
+then
+    Mano(stop)
+end
+
+trigger 
+    always 
+condition
+    find_traffic_light(motor_vehicle_signal_light, red, not_flash, <, 20m)
+    vehicle_state(turn_left_or_go_straight)
+then
+    Mano(stop)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(motor_vehicle_signal_light, red, not_flash, <, 20m)
+    vehicle_state(turn_right, (<, 1km/h))
+then
+    Mano(launch)
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end
+trigger 
+    always 
+condition
+    find_traffic_light_state(motor_vehicle_signal_light, red, not_flash, <, 20m)
+    vehicle_state(turn_right)
+then
+    set(Whether_red_light_turn_right, True)
+    Set(Expected_speed, 30km/h)
+end
+
+
+According to the original description requirements, when the vehicle is descending a slope, the engine must not be turned off, nor should the vehicle be shifted into neutral gear. However, for the constraint 'descending a slope' and the actions 'must not turn off the engine' and 'must not shift into neutral gear', UDrive's current triggers, conditions, and actions cannot accurately or appropriately describe them, so no UDrive programs will be generated.
